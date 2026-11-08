@@ -1,0 +1,3637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>桂味 · GUIWEI</title>
+  <style>
+    @font-face {
+      font-family: "ALIBABAPUHUITI-3-35-THIN";
+      src: url("../shared/alibaba-thin.ttf") format("truetype");
+      font-display: swap;
+      font-weight: 300;
+    }
+    @font-face {
+      font-family: "ALIBABAPUHUITI-3-45-LIGHT";
+      src: url("../shared/alibaba-thin.ttf") format("truetype");
+      font-display: swap;
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: "ALIBABAPUHUITI-3-55-REGULARL3";
+      src: url("../shared/alibaba-regular.ttf") format("truetype");
+      font-display: swap;
+      font-weight: 500;
+    }
+    @font-face {
+      font-family: "字酷堂松风行书体(个人非商业)";
+      src: url("../shared/songfeng.ttf") format("truetype");
+      font-display: swap;
+      font-weight: 400;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background-color: #f7f4ee;
+      color: #333333;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------------- 左侧标尺 ---------------- */
+    .timeline-rail {
+      position: fixed;
+      top: 0; bottom: 0;
+      left: clamp(35px, 8vw, 110px);
+      width: 40px;
+      z-index: 99;
+      pointer-events: none;
+    }
+    .timeline-line {
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 1px;
+      transform: translateX(-50%);
+      border-left: 1.5px dashed #cfcbc2;
+    }
+    /* 阶段 0 顶部红圆球 */
+    .timeline-dot {
+      position: absolute;
+      left: 50%;
+      top: 140px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #9d4637;
+      z-index: 3;
+      pointer-events: auto;
+      cursor: pointer;
+      
+      --mag-x: 0px;
+      --mag-y: 0px;
+
+      transform: translate(calc(-50% + var(--mag-x)), calc(-50% + var(--mag-y))) scale(1);
+      transition: top 0.08s linear, transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    .timeline-dot::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid #9d4637;
+      opacity: 0;
+      transform: scale(0.4);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+      pointer-events: none;
+    }
+
+    .timeline-dot.is-hovering::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .timeline-numbers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; }
+    .roman-num {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: "Times New Roman", Times, serif;
+      font-size: 22px;
+      color: #88837c;
+      user-select: none;
+      background-color: #f7f4ee;
+      padding: 4px 6px;
+      line-height: 1;
+      transition: color 0.25s ease, transform 0.25s ease, font-weight 0.25s ease;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .roman-num:hover { color: #9d4637; transform: translate(-50%, -50%) scale(1.18); }
+    .roman-num.is-active { color: #9d4637; font-weight: bold; }
+
+    .poster-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 1420px;
+      margin: 0 auto;
+      background-color: #f7f4ee;
+    }
+
+    /* ==================== Stage 0 ==================== */
+    .stage-zero { position: relative; width: 100%; min-height: 220vh; }
+    .section-visual {
+      position: relative;
+      width: 100%;
+      padding-top: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header-en {
+      text-align: center;
+      font-family: "Times New Roman", Times, serif;
+      color: #a49e96;
+      font-size: 18px;
+      letter-spacing: 0.26em;
+      line-height: 1.7;
+      margin-bottom: 65px;
+      user-select: none;
+    }
+    .circle-card {
+      position: relative;
+      width: clamp(480px, 30vw, 760px);
+      height: clamp(480px, 30vw, 760px);
+      background-color: #bcc5bc;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .lychee-img {
+      position: absolute;
+      left: 50%; bottom: -25%;
+      width: 120%;
+      transform: translateX(-50%) translateY(0);
+      transition: transform 0.75s cubic-bezier(0.2, 0.85, 0.25, 1);
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .circle-card:hover .lychee-img { transform: translateX(-50%) translateY(-22px); }
+
+    .section-overview-text {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 25vh;
+    }
+    .calligraphy-title {
+      font-size: clamp(120px, 14vw, 195px);
+      color: #9d4637;
+      line-height: 1;
+      letter-spacing: 0.16em;
+      text-indent: 0.16em;
+      margin-bottom: 110px;
+      font-weight: normal;
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", "STKaiti", cursive, serif;
+      user-select: none;
+    }
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      width: 380px;
+      margin-left: 25px;
+    }
+    .info-row { display: flex; align-items: baseline; font-size: 20px; letter-spacing: 0.08em; }
+    .info-label {
+      font-family: "ALIBABAPUHUITI-3-55-REGULARL3", "AlibabaPuHuiTi-3-55-RegularL3", "AlibabaPuHuiTi-3-55-Regular", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 400;
+      color: #1a1a1a;
+      width: 78px;
+      flex-shrink: 0;
+      letter-spacing: 0.22em;
+    }
+    .info-value {
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      color: #4a4a4a;
+      padding-left: 8px;
+    }
+
+    /* ==================== Stage 1 ==================== */
+    .stage-one { position: relative; width: 100%; padding-top: 22vh; padding-bottom: 25vh; }
+
+    .stage1-narrow-center-column {
+      width: clamp(260px, 24vw, 320px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .intro-stamp-box {
+      position: relative;
+      width: clamp(86px, 7.8vw, 105px);
+      height: clamp(140px, 12.8vw, 175px);
+      background-color: #bcc5bc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 125px;
+    }
+    .intro-stamp-text {
+      position: absolute;
+      white-space: nowrap;
+      font-size: clamp(92px, 9.8vw, 100px);
+      color: #9d4637;
+      letter-spacing: 0.01em;
+      text-indent: 0.06em;
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      user-select: none;
+      pointer-events: none;
+    }
+    .stage1-paragraph-origin {
+      width: 100%;
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      font-size: 14.5px;
+      line-height: 2.1;
+      color: #444444;
+      letter-spacing: 0.04em;
+      margin-bottom: clamp(90px, 10vh, 130px);
+      text-align: left;
+    }
+    .stage1-paragraph-region {
+      width: 100%;
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      font-size: 14.5px;
+      line-height: 2.1;
+      color: #444444;
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .feature-title-light {
+      width: 100%;
+      font-family: "ALIBABAPUHUITI-3-45-LIGHT", "AlibabaPuHuiTi-3-45-Light", "AlibabaPuHuiTi-3-Light", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 300;
+      font-size: 26px;
+      color: #1a1a1a;
+      letter-spacing: 0.15em;
+      margin-top: 15px;
+      margin-bottom: 35px;
+      text-align: left;
+    }
+    .stage1-paragraph-details {
+      width: 100%;
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      font-size: 14.5px;
+      line-height: 2.1;
+      color: #444444;
+      letter-spacing: 0.04em;
+      margin-bottom: 50px;
+      text-align: left;
+    }
+
+    .stage1-wide-illustration {
+      width: clamp(420px, 56%, 720px);
+      margin: 80px auto 160px auto;
+      overflow: hidden;
+      background-color: #bcc5bc;
+      position: relative;
+    }
+    .stage1-wide-illustration img { width: 100%; height: auto; display: block; }
+
+    .stage1-branch-reveal {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      cursor: crosshair;
+      --reveal-x: 50%;
+      --reveal-y: 50%;
+      --reveal-r: 90px;
+    }
+
+    .stage1-branch-reveal img.stage1-branch-top {
+      position: absolute;
+      top:    var(--hover-top,    0%);
+      left:   var(--hover-left,   -10%);
+      width:  var(--hover-width,  100%);
+      height: var(--hover-height, 100%);
+      object-fit: fill;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      -webkit-mask-image: radial-gradient(
+        circle var(--reveal-r) at var(--reveal-x) var(--reveal-y),
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,0.85) 35%,
+        rgba(0,0,0,0.35) 70%,
+        rgba(0,0,0,0) 100%
+      );
+      mask-image: radial-gradient(
+        circle var(--reveal-r) at var(--reveal-x) var(--reveal-y),
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,0.85) 35%,
+        rgba(0,0,0,0.35) 70%,
+        rgba(0,0,0,0) 100%
+      );
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+    .stage1-branch-reveal.is-hovering img.stage1-branch-top,
+    .stage1-branch-reveal.is-auto-demo img.stage1-branch-top {
+      opacity: 1;
+    }
+
+    .stage1-poetry-hero {
+      margin-left: clamp(60px, 14.5%, 190px);
+      width: clamp(520px, 75%, 960px);
+      margin-bottom: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      user-select: none;
+    }
+    .stage1-poetry-line {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(56px, 6.2vw, 88px);
+      color: #242220;
+      line-height: 1.15;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .char-mask {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+      margin-right: 0.14em;
+    }
+    .char {
+      display: inline-block;
+      transform: translateY(110%);
+      transition: transform 2.5s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .scroll-reveal.is-visible .char { transform: translateY(0); }
+
+    .stage1-rider-section {
+      margin-left: clamp(240px, 52%, 670px);
+      width: clamp(290px, 36vw, 420px);
+      margin-bottom: 120px;
+    }
+    .rider-art-box { width: 100%; margin-bottom: 36px; overflow: hidden; }
+    .rider-art-box img { width: 100%; height: auto; display: block; }
+    .rider-story-text {
+      width: 100%;
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      font-size: 12px;
+      line-height: 2.0;
+      color: #555555;
+      letter-spacing: 0.03em;
+    }
+    .rider-story-text p { margin-bottom: 24px; }
+
+    /* ==================== Stage 2 ==================== */
+    .stage-two {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      padding-top: 5vh;
+      padding-bottom: 10vh;
+      padding-left: clamp(40px, 11vw, 150px);
+      padding-right: clamp(30px, 5.5vw, 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stage2-layout-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr; /* 保持双列布局 */
+      gap: clamp(24px, 3.5vw, 60px);
+      align-items: center;
+      width: 100%;
+      max-width: 1240px;
+    }
+    .stage2-left-block { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
+    .tss-ruler-svg { width: 160px; height: 16px; margin-bottom: 14px; }
+    .tss-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(32px, 3vw, 40px);
+      color: #9d4637;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+    .tss-description {
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #4a4a4a;
+      letter-spacing: 0.03em;
+      max-width: 320px;
+      margin-bottom: 20px;
+    }
+    .ct-stage { position: relative; width: 100%; max-width: 440px; user-select: none; }
+    .ct-fruit-pair { position: relative; width: 100%; transform-origin: top left; will-change: transform; }
+    .ct-bg-img { width: 100%; height: auto; display: block; pointer-events: none; -webkit-user-drag: none; }
+    .ct-lens {
+      position: absolute;
+      top: 36%; left: 1%;
+      width: 33%;
+      aspect-ratio: 1.25;
+      border: 2px solid #8F9F8E;
+      background-color: #f7f4ee;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      transition: box-shadow 0.4s ease;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08), 0 0 0 0 rgba(143, 159, 142, 0.4);
+      animation: lens-pulse 3s infinite;
+    }
+    @keyframes lens-pulse {
+      0% { box-shadow: 0 4px 18px rgba(0,0,0,0.08), 0 0 0 0 rgba(143, 159, 142, 0.4); }
+      70% { box-shadow: 0 4px 18px rgba(0,0,0,0.08), 0 0 0 10px rgba(143, 159, 142, 0); }
+      100% { box-shadow: 0 4px 18px rgba(0,0,0,0.08), 0 0 0 0 rgba(143, 159, 142, 0); }
+    }
+    .lens-corners { position: absolute; inset: 4px; pointer-events: none; z-index: 15; }
+    .lens-corners i { position: absolute; width: 10px; height: 10px; border: 1.5px solid #8F9F8E; opacity: 0.8; }
+    .lens-corners i:nth-child(1) { top: 0; left: 0; border-right: none; border-bottom: none; }
+    .lens-corners i:nth-child(2) { top: 0; right: 0; border-left: none; border-bottom: none; }
+    .lens-corners i:nth-child(3) { bottom: 0; left: 0; border-right: none; border-top: none; }
+    .lens-corners i:nth-child(4) { bottom: 0; right: 0; border-left: none; border-top: none; }
+    .lens-crosshair {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none; z-index: 15; opacity: 0; transform: scale(0.9);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      background: rgba(247, 244, 238, 0.1);
+    }
+    .crosshair-icon { font-size: 28px; color: #8F9F8E; font-weight: 300; }
+    .ct-lens:hover .lens-crosshair,
+    .ct-lens.is-nudging .lens-crosshair { opacity: 1; transform: scale(1); }
+    .ct-lens:active { cursor: grabbing; }
+    .ct-lens:active .lens-crosshair { opacity: 0 !important; }
+    .ct-lens-img {
+      position: absolute; top: 0; left: 0; pointer-events: none;
+      max-width: none; max-height: none; transform-origin: top left; will-change: transform, width;
+    }
+    .ct-leads-svg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 14; overflow: visible;
+    }
+    .lead-polyline {
+      fill: none; stroke: #8F9F8E; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .tss-badge-box {
+      position: absolute; display: flex; align-items: baseline; gap: 10px;
+      z-index: 15; pointer-events: none; white-space: nowrap; margin: 0; padding: 0; line-height: 1;
+    }
+    .tss-badge-label {
+      font-family: "ALIBABAPUHUITI-3-55-REGULARL3", "AlibabaPuHuiTi-3-55-Regular", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 700; font-size: 22px; color: #9cb0a0; letter-spacing: 0.08em; line-height: 1; display: inline-block;
+    }
+    .tss-badge-value {
+      font-family: "Times New Roman", Times, serif; font-size: 28px; font-weight: bold; color: #9cb0a0; line-height: 1; display: inline-block;
+    }
+
+    .stage2-right-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; width: 100%; }
+    
+    .stage2-metrics-block {
+      width: 100%; max-width: 460px; display: flex; flex-direction: column; align-items: flex-end; margin-top: 0;
+    }
+    .metrics-header {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: 22px; color: #9d4637; letter-spacing: 0.12em; margin-bottom: 4px; font-weight: normal;
+    }
+    .metrics-row {
+      display: flex; justify-content: space-between; align-items: baseline; width: 100%;
+      padding: 5px 0; border-bottom: 1.2px solid #9d4637;
+    }
+    .metrics-label {
+      font-family: "ALIBABAPUHUITI-3-55-REGULARL3", "AlibabaPuHuiTi-3-55-Regular", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 400; font-size: 16px; color: #1a1a1a; letter-spacing: 0.08em;
+    }
+    .metrics-value {
+      font-family: "Times New Roman", Times, serif; font-size: 20px; color: #1a1a1a; letter-spacing: 0.04em;
+    }
+    .metrics-unit { font-size: 14px; margin-left: 4px; color: #4a4a4a; }
+
+    /* ==================== Stage 3.1 ==================== */
+    .stage-three-one {
+      position: relative; width: 100%; min-height: 100vh; padding-top: 8vh; padding-bottom: 20vh;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .stage3-1-canvas {
+      position: relative; width: clamp(980px, 92vw, 1420px); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 30px;
+    }
+    .stage3-1-left-chart { width: 680px; display: flex; flex-direction: column; user-select: none; }
+    .flavor-matrix-svg { width: 100%; height: auto; overflow: visible; }
+    .variety-name-text {
+      font-family: "ALIBABAPUHUITI-3-45-LIGHT", "AlibabaPuHuiTi-3-45-Light", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-size: 11.5px; font-weight: 300; fill: #8c857b; letter-spacing: 0.02em;
+    }
+    .flavor-bubble-cell { transition: opacity 0.28s ease; }
+    .flavor-bubble-cell.is-dimmed { opacity: 0.12 !important; }
+    .stage3-1-right-content { width: clamp(360px, 32vw, 450px); display: flex; flex-direction: column; margin-bottom: 80px; padding-left: 20px; }
+    .stage3-1-title-row { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+    .stage3-1-calligraphy-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(44px, 4vw, 58px); color: #9d4637; line-height: 1; letter-spacing: 0.15em; text-indent: 0.15em; font-weight: normal; user-select: none;
+    }
+    .replay-seq-btn {
+      font-family: "ALIBABAPUHUITI-3-45-LIGHT", "AlibabaPuHuiTi-3-45-Light", sans-serif;
+      font-size: 11px; color: #a49e96; background: transparent; border: 1px solid #d5d0c8;
+      border-radius: 12px; padding: 2px 9px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.25s ease;
+    }
+    .replay-seq-btn:hover { background: #9d4637; color: #fff; border-color: #9d4637; }
+    .stage3-1-paragraphs-wrap { display: flex; gap: clamp(22px, 2.5vw, 40px); align-items: flex-start; }
+    .para-lead {
+      width: 175px; font-family: "ALIBABAPUHUITI-3-55-REGULARL3", "AlibabaPuHuiTi-3-55-Regular", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 400; font-size: 13.5px; line-height: 1.85; color: #1a1817; letter-spacing: 0.03em;
+    }
+    .para-detail {
+      width: 185px; font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 12.5px; line-height: 1.9; color: #55514c; letter-spacing: 0.02em;
+    }
+
+    /* ==================== Stage 3.2 ==================== */
+    .stage-three-two {
+      position: relative; width: 100%; min-height: 100vh; padding-top: 8vh; padding-bottom: 25vh;
+      padding-left: clamp(80px, 12vw, 160px); padding-right: clamp(24px, 4vw, 70px);
+      display: flex; justify-content: center; align-items: center;
+    }
+    .stage3-2-canvas { position: relative; width: 100%; max-width: 1240px; display: flex; flex-direction: column; user-select: none; }
+    .stage3-2-top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; width: 100%; }
+    .stage3-2-narrative-group { display: flex; align-items: flex-start; gap: clamp(20px, 3vw, 45px); }
+    .narrative-block-1 {
+      width: 160px; font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 11.5px; line-height: 1.85; color: #55514c; letter-spacing: 0.02em;
+    }
+    .narrative-block-2 {
+      width: 170px; margin-top: 48px; font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 11.5px; line-height: 1.85; color: #55514c; letter-spacing: 0.02em;
+    }
+    .stage3-2-header-group { display: flex; flex-direction: column; align-items: flex-start; margin-top: 8px; }
+    .stage3-2-title-line { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+    .stage3-2-shufa-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(24px, 2.2vw, 30px); color: #9d4637; letter-spacing: 0.12em; font-weight: normal; line-height: 1;
+    }
+    .stage3-2-vs { font-family: "Times New Roman", Times, serif; font-size: 19px; color: #9d4637; font-style: normal; letter-spacing: 0.06em; }
+    .stage3-2-subtitle {
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 11.5px; color: #6e6a64; letter-spacing: 0.03em;
+    }
+    .stage3-2-bottom-area { display: flex; justify-content: flex-end; align-items: center; width: 100%; margin-top: 15px; }
+    .stage32-unified-svg { width: 100%; height: auto; overflow: visible; }
+    .compare-block-group { opacity: 0; transform: translateY(-8px); transition: opacity 0.15s ease, transform 0.95s cubic-bezier(0.2, 0.8, 0.25, 1); }
+    .compare-block-group.is-row-visible { opacity: 1; transform: translateY(0); }
+    .compare-block-rect { transition: opacity 0.28s ease, filter 0.28s ease; cursor: pointer; }
+    .compare-block-rect.is-dimmed { opacity: 0.12 !important; }
+
+    /* ==================== Stage 3.3 ==================== */
+    .stage-three-three {
+      position: relative; width: 100%; min-height: auto; padding-top: 10vh; padding-bottom: 15vh;
+      padding-left: clamp(80px, 12vw, 160px); padding-right: clamp(24px, 4vw, 80px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+    }
+    .stage-wrapper {
+      position: relative; width: 100%; max-width: 980px; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: center; user-select: none;
+    }
+    .stage-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+    .stage-shufa-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", "STKaiti", cursive, serif;
+      font-size: clamp(34px, 3.2vw, 42px); color: #9d4637; letter-spacing: 0.15em; line-height: 1; margin-bottom: 12px; font-weight: normal;
+    }
+    .stage-divider-line { width: 300px; height: 1.5px; background-color: #9d4637; margin-bottom: 10px; }
+    .stage-subtitle {
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 13.5px; color: #7d7770; letter-spacing: 0.1em; margin-bottom: 22px;
+    }
+    .dim-toggle-bar { display: inline-flex; background-color: #ede8df; padding: 4px; border-radius: 20px; border: 1px solid #e0d9cd; }
+    .dim-btn {
+      padding: 6px 18px; border: none; background: transparent; border-radius: 16px; font-size: 13px; color: #6a645d;
+      cursor: pointer; font-weight: 500; transition: background-color 0.3s ease, color 0.3s ease; outline: none; font-family: inherit;
+    }
+    .dim-btn.active { background: #9d4637; color: #fff; }
+
+    .chart-stage-wrap {
+      position: relative; width: 100%; max-width: 860px; margin-top: 25px; padding-bottom: 92px; perspective: 1200px;
+    }
+    .chart-stage-wrap.mode-3d { cursor: grab; touch-action: none; }
+    .chart-stage-wrap.mode-3d.dragging { cursor: grabbing; }
+    .matrix-scene {
+      width: 100%; transform-style: preserve-3d; transition: transform 0.85s cubic-bezier(0.34, 1.15, 0.64, 1);
+      transform-origin: center center -30px; display: flex; flex-direction: column; align-items: center; will-change: transform;
+    }
+    .chart-stage-wrap.dragging .matrix-scene,
+    .chart-stage-wrap.no-anim .matrix-scene { transition: none; }
+
+    .matrix-grid-table { display: flex; flex-direction: column; gap: 10px; transform-style: preserve-3d; }
+    .scale-header-row { display: flex; align-items: center; margin-left: 92px; gap: 8px; transform-style: preserve-3d; }
+    .scale-tick-label { width: 34px; text-align: center; font-size: 12px; color: #9c9489; font-family: "Times New Roman", serif; pointer-events: none; }
+    .matrix-row { display: flex; align-items: center; transform-style: preserve-3d; }
+    .variety-label {
+      width: 92px; padding-right: 18px; text-align: right; font-size: 13.5px; color: #7d756d; cursor: pointer;
+      transition: color 0.25s, font-weight 0.25s; white-space: nowrap;
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+    }
+    .matrix-row.row-active .variety-label { color: #9d4637; font-weight: 600; }
+    .blocks-strip { display: flex; gap: 8px; transform-style: preserve-3d; }
+
+    .cube-item { position: relative; width: 34px; height: 22px; transform-style: preserve-3d; cursor: pointer; }
+    .cube-body {
+      position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 0 0;
+      transform: scale3d(1, 1, 0.001); transition: transform 0.85s cubic-bezier(0.34, 1.15, 0.64, 1);
+    }
+    .chart-stage-wrap.mode-3d .cube-item.in-range .cube-body { transform: scale3d(1, 1, var(--h-scale, 1)); }
+    .chart-stage-wrap.mode-3d .cube-item.out-range .cube-body { transform: scale3d(1, 1, 0.087); }
+    .cube-face { position: absolute; backface-visibility: visible; outline: 0.5px solid transparent; transition: background-color 0.3s ease, filter 0.25s ease; }
+    .cube-top   { width: 34px; height: 22px; left: 0; top: 0; transform: translateZ(46px); background-color: #ede9e3; }
+    .cube-front { width: 34px; height: 46px; left: 0; top: 22px; transform-origin: top left; transform: rotateX(90deg); background-color: #ded9d0; }
+    .cube-back  { width: 34px; height: 46px; left: 0; top: 0; transform-origin: top left; transform: rotateX(90deg); background-color: #ded9d0; }
+    .cube-left  { width: 46px; height: 22px; left: 0; top: 0; transform-origin: top left; transform: rotateY(-90deg); background-color: #cfc8be; }
+    .cube-right { width: 46px; height: 22px; left: 34px; top: 0; transform-origin: top left; transform: rotateY(-90deg); background-color: #cfc8be; }
+
+    .cube-item.in-range .cube-top   { background-color: #cca39a; }
+    .cube-item.in-range .cube-front { background-color: #b98e85; }
+    .cube-item.in-range .cube-back  { background-color: #b98e85; }
+    .cube-item.in-range .cube-left  { background-color: #a87b72; }
+    .cube-item.in-range .cube-right { background-color: #a87b72; }
+    .matrix-row.row-active .cube-item.in-range .cube-top   { background-color: #9d4637; }
+    .matrix-row.row-active .cube-item.in-range .cube-front { background-color: #873729; }
+    .matrix-row.row-active .cube-item.in-range .cube-back  { background-color: #873729; }
+    .matrix-row.row-active .cube-item.in-range .cube-left  { background-color: #722c20; }
+    .matrix-row.row-active .cube-item.in-range .cube-right { background-color: #722c20; }
+    .cube-item:hover .cube-face { filter: brightness(1.06); }
+
+    .scent-flag {
+      position: absolute; width: 122px; height: 54px; background-color: #b2bdb0; clip-path: polygon(50% 0%, 100% 32%, 100% 100%, 0% 100%, 0% 32%);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 8px; gap: 1px; color: #1a1a18;
+      pointer-events: none; z-index: 50; transform: translate(-50%, 0); box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      transition: top 0.22s cubic-bezier(0.2, 0.8, 0.25, 1), left 0.22s cubic-bezier(0.2, 0.8, 0.25, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.25, 1);
+      font-family: "ALIBABAPUHUITI-3-45-LIGHT", "AlibabaPuHuiTi-3-45-Light", "Alibaba PuHuiTi 3.0", sans-serif;
+    }
+    .chart-stage-wrap.mode-3d .scent-flag { height: 68px; }
+    .flag-flavor { font-size: 13px; font-weight: 500; line-height: 1.15; white-space: nowrap; }
+    .flag-tss { display: none; font-size: 11px; font-weight: 400; line-height: 1.1; color: #3f4a3e; font-family: "Times New Roman", "PingFang SC", serif; letter-spacing: 0.02em; white-space: nowrap; }
+    .chart-stage-wrap.mode-3d .flag-tss { display: block; }
+
+    .stage-hint {
+      position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font-size: 12px; color: #a89f93; letter-spacing: 0.08em; white-space: nowrap;
+      pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+    }
+    .chart-stage-wrap.mode-3d .stage-hint { opacity: 1; }
+
+    /* ==================== Stage 3.4 ==================== */
+    .stage-three-four {
+      position: relative; width: 100%; min-height: 100vh; padding-top: 12vh; padding-bottom: 35vh;
+      padding-left: clamp(80px, 12vw, 160px); padding-right: clamp(24px, 4vw, 80px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+    }
+    .stage3-4-canvas { position: relative; width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
+    .stage3-4-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(38px, 3.6vw, 50px); color: #9d4637; letter-spacing: 0.16em; text-indent: 0.16em; line-height: 1; margin-bottom: 40px;
+    }
+    .stage3-4-chart-box { position: relative; width: 100%; max-width: 960px; }
+    
+    .stage3-4-legend {
+      display: flex; flex-direction: row; gap: 24px; width: 100%; max-width: 960px;
+      padding-left: 110px; margin-bottom: 20px; z-index: 10;
+    }
+    
+    .stage3-4-legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-box-peel { width: 32px; height: 32px; border: 3px solid #9d4637; background-color: transparent; }
+    .legend-box-pulp { width: 32px; height: 32px; background-color: #fbd6d2; }
+    .legend-text-peel { font-family: "ALIBABAPUHUITI-3-55-REGULARL3", sans-serif; font-weight: 500; font-size: 13.5px; color: #9d4637; }
+    .legend-text-pulp { font-family: "ALIBABAPUHUITI-3-55-REGULARL3", sans-serif; font-weight: 500; font-size: 13.5px; color: #f39e94; }
+    .stage3-4-svg { width: 100%; height: auto; overflow: visible; }
+    .bar-column-group { cursor: pointer; transform-origin: bottom; transition: opacity 0.3s ease; }
+    .bar-stack-animated { transform-origin: 0 340px; transform: scaleY(0); will-change: transform; }
+    .stage3-4-canvas.is-hovering .bar-column-group { opacity: 0.28; }
+    .stage3-4-canvas.is-hovering .bar-column-group.is-bar-active { opacity: 1 !important; }
+    .stage3-4-canvas.is-hovering .bar-column-group.is-bar-active rect.bar-pulp { fill: #fbb8ac !important; }
+    .stage3-4-canvas.is-hovering .bar-column-group.is-bar-active rect.bar-peel { fill: #a35346 !important; }
+    .bar-data-text { opacity: 0; transition: opacity 0.22s ease; pointer-events: none; }
+    .bar-column-group:hover .bar-data-text { opacity: 1; }
+
+    /* ==================== Stage 3.5 ==================== */
+    .stage-three-five {
+      position: relative; width: 100%; min-height: 100vh; padding-top: 2vh; padding-bottom: 22vh;
+      padding-left: clamp(80px, 12vw, 160px); padding-right: clamp(24px, 4vw, 80px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+    }
+    .stage3-5-canvas { position: relative; width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; transition: transform 0.3s ease; }
+    .stage3-5-chart-box { position: relative; width: 100%; max-width: 960px; }
+    .stage3-5-svg { width: 100%; height: auto; overflow: visible; }
+    .down-bar-stack-animated { transform-origin: 0 0px; transform: scaleY(0); will-change: transform; }
+    .down-bar-column-group { cursor: pointer; transition: opacity 0.3s ease; }
+    .stage3-5-canvas.is-hovering .down-bar-column-group { opacity: 0.25; }
+    .stage3-5-canvas.is-hovering .down-bar-column-group.is-bar-active { opacity: 1 !important; }
+    .stage3-5-canvas.is-hovering .down-bar-column-group.is-bar-active rect.down-bar-fill { fill: #ff9e8f !important; }
+    .down-bar-data-text { opacity: 0; transition: opacity 0.22s ease; pointer-events: none; }
+    .down-bar-column-group:hover .down-bar-data-text { opacity: 1; }
+    .stage3-5-bottom-desc { display: flex; flex-direction: column; align-items: center; margin-top: 32px; text-align: center; }
+    .stage3-5-shufa-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(38px, 3.6vw, 48px); color: #9d4637; letter-spacing: 0.16em; text-indent: 0.16em; line-height: 1; margin-bottom: 20px;
+    }
+    .stage3-5-desc-line {
+      font-family: "ALIBABAPUHUITI-3-35-THIN", "AlibabaPuHuiTi-3-35-Thin", "Alibaba PuHuiTi 3.0", sans-serif;
+      font-weight: 100; font-size: 13px; line-height: 1.85; color: #55514c; letter-spacing: 0.03em; max-width: 620px;
+    }
+
+    /* ==================== Stage 4 ==================== */
+    .stage-four {
+      position: relative; width: 100%; min-height: 105vh; padding-top: 10vh; padding-bottom: 25vh;
+      padding-left: clamp(80px, 12vw, 160px); padding-right: clamp(24px, 4vw, 80px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none;
+    }
+    .stage4-canvas { position: relative; width: 100%; max-width: 1100px; display: flex; flex-direction: column; align-items: center; }
+    .stage4-top-poetry-row { position: relative; width: 100%; max-width: 860px; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 60px; }
+    .stage4-poetry-wrap { display: flex; flex-direction: column; gap: 24px; }
+    .stage4-poetry-line {
+      font-family: "字酷堂松风行书体(个人非商业)", "ZiKuTangSongFengXingShu-Personal-Use", "ZiKuTangSongFengXingShu", "字酷堂松风行书体", "FZShuTi", cursive, serif;
+      font-size: clamp(48px, 4.6vw, 68px); color: #242220; line-height: 1.15; letter-spacing: 0.16em; text-indent: 0.16em;
+    }
+    .peel-link-btn { display: flex; flex-direction: column; align-items: flex-start; text-decoration: none; cursor: pointer; margin-bottom: 12px; padding-right: 20px; }
+    .peel-link-text { font-family: "ALIBABAPUHUITI-3-45-LIGHT", "AlibabaPuHuiTi-3-45-Light", sans-serif; font-size: 14.5px; color: #1a1817; letter-spacing: 0.1em; margin-bottom: 8px; transition: color 0.25s ease; }
+    .peel-arrow-svg { width: 130px; height: 12px; overflow: visible; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.25, 1); }
+    .peel-link-btn:hover .peel-link-text { color: #9d4637; font-weight: 500; }
+    .peel-link-btn:hover .peel-arrow-svg { transform: translateX(6px); }
+    .stage4-bottom-art-box {
+      position: relative; width: clamp(520px, 60vw, 840px); height: clamp(260px, 30vw, 360px); display: flex; justify-content: center; align-items: flex-end;
+    }
+    .stage4-green-rect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #bcc5bc; z-index: 1; }
+    .stage4-lychee-cluster-img { position: relative; z-index: 2; width: 64%; height: auto; display: block; transform: translateY(40%); user-select: none; -webkit-user-drag: none; }
+
+    /* ---------------- 滚轮渐显 ---------------- */
+    .scroll-reveal { opacity: 0; transform: translateY(45px); transition: opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1); will-change: opacity, transform; }
+    .scroll-reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* 图例交互暗示 */
+    .legend-segment-svg, .legend-seg-32 { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.25, 1), filter 0.25s ease; }
+    .legend-segment-svg:hover, .legend-seg-32:hover { transform: scale(1.12); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)) brightness(1.05); }
+
+
+    /* =========================================================
+       嵌入式香气化合物图谱 App (整体缩放到 80%)
+       ========================================================= */
+    #stageAromaApp {
+      position: relative;
+      width: 100%;
+      /* 完全复用 Stage 3.3 的 padding 保证与其它区块对齐 */
+      padding-top: 10vh;
+      padding-bottom: 15vh;
+      padding-left: clamp(80px, 12vw, 160px);
+      padding-right: clamp(24px, 4vw, 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      background-color: #f7f4ee;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      
+      /* ★ 核心缩放：直接在根容器用 zoom，不仅改变了视觉大小，还改变了实际占用布局，不留空白 */
+      zoom: 0.8; 
+      
+      --bg-canvas: #f7f4ee;
+      --border-soft: #d4cec4;
+      --border-dashed: #e8e4de;
+      --text-main: #383431;
+      --text-muted: #9e9890;
+      --accent-red: #9d4637;
+      --accent-green: #8F9F8E;
+    }
+    #stageAromaApp * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    #stageAromaApp .aroma-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 1040px; /* 与 stage 3.3 容器同宽 */
+    }
+    #stageAromaApp .page-header { text-align: center; margin-bottom: 24px; }
+    #stageAromaApp .page-title {
+      font-family: "字酷堂松风行书体(个人非商业)", "FZShuTi", "Kaiti", cursive, serif;
+      font-size: 36px; color: var(--accent-red); letter-spacing: 0.16em; margin-bottom: 4px;
+    }
+    #stageAromaApp .page-subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; text-transform: uppercase; }
+
+    #stageAromaApp .main-mode-wrap { margin-bottom: 24px; }
+    #stageAromaApp .main-mode-track {
+      position: relative; display: flex; width: 260px; background: rgba(212, 206, 196, 0.45);
+      border: 1px solid var(--border-soft); border-radius: 20px; padding: 2px; user-select: none;
+    }
+    #stageAromaApp .main-mode-thumb {
+      position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 2);
+      background: var(--accent-red); border-radius: 16px; transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+      box-shadow: none; pointer-events: none; z-index: 1;
+    }
+    #stageAromaApp .mode-slot {
+      flex: 1; position: relative; z-index: 2; background: transparent; border: none; padding: 6px 0;
+      font-size: 13px; font-weight: 500; color: var(--text-main); cursor: pointer; text-align: center; transition: color 0.18s ease;
+    }
+    #stageAromaApp .mode-slot.active { color: #ffffff; font-weight: 600; }
+
+    #stageAromaApp .main-viewport { width: 100%; max-width: 100%; position: relative; }
+    #stageAromaApp .view-panel { display: none; animation: fadeInApp 0.22s ease forwards; width: 100%; }
+    #stageAromaApp .view-panel.active { display: block; }
+    @keyframes fadeInApp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 彻底去边框，铺满 */
+    #stageAromaApp .card-shell {
+      border: none; 
+      background: transparent; 
+      padding: 0; 
+      border-radius: 0; 
+      box-shadow: none; 
+      position: relative;
+      width: 100%; 
+    }
+    #stageAromaApp .card-head {
+      display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px;
+      margin-bottom: 16px; border-bottom: 1px solid rgba(212, 206, 196, 0.6);
+      width: 100%;
+    }
+    #stageAromaApp .card-head h2 { font-size: 16px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-main); }
+    #stageAromaApp .card-head span { font-size: 12px; color: var(--text-muted); }
+
+    /* 雷达图去掉高度限制，自适应撑满 */
+    #stageAromaApp .radar-svg-box { width: 100%; margin-bottom: 16px; display: flex; justify-content: center; }
+    #stageAromaApp .radar-svg { width: 100%; height: auto; max-height: 480px; overflow: visible; }
+    #stageAromaApp .radar-legend-grid {
+      border-top: 1px dashed var(--border-dashed); padding-top: 16px;
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; /* 改成 4 列更宽敞 */
+      gap: 12px 16px;
+      width: 100%;
+    }
+    #stageAromaApp .legend-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px;
+      cursor: pointer; font-size: 13px; color: var(--text-main); transition: background 0.15s;
+    }
+    #stageAromaApp .legend-item:hover, #stageAromaApp .legend-item.is-focus { background: rgba(212, 206, 196, 0.35); }
+    #stageAromaApp .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    #stageAromaApp .legend-name { font-weight: 600; }
+    #stageAromaApp .legend-meta { font-size: 11.5px; color: var(--text-muted); }
+
+    #stageAromaApp .slider-track-wrap { margin-bottom: 16px; width: 100%; }
+    #stageAromaApp .variety-slider-track {
+      position: relative; display: flex; background: rgba(212, 206, 196, 0.45); border: 1px solid var(--border-soft);
+      border-radius: 20px; padding: 3px; user-select: none; -webkit-user-select: none; touch-action: pan-y; cursor: pointer;
+    }
+    #stageAromaApp .slider-thumb {
+      position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / 8);
+      background: var(--accent-red); border-radius: 16px; transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+      box-shadow: none; pointer-events: none; z-index: 1;
+    }
+    #stageAromaApp .track-slot {
+      flex: 1; position: relative; z-index: 2; background: transparent; border: none; padding: 6px 0;
+      font-size: 12px; font-weight: 500; color: var(--text-main); cursor: pointer; text-align: center;
+      transition: color 0.18s ease; white-space: nowrap;
+    }
+    #stageAromaApp .track-slot.active { color: #ffffff; font-weight: 600; }
+
+    #stageAromaApp .dim-toggle { display: inline-flex; background: rgba(212, 206, 196, 0.45); padding: 2px; border-radius: 16px; border: 1px solid var(--border-soft); }
+    #stageAromaApp .dim-btn {
+      border: none; background: transparent; padding: 3px 12px; font-size: 11px; font-weight: 500; color: var(--text-muted);
+      border-radius: 14px; cursor: pointer; transition: all 0.2s;
+    }
+    #stageAromaApp .dim-btn.active { background: #ffffff; color: var(--text-main); box-shadow: none; font-weight: 600; }
+
+    /* 气泡图铺满宽度并自适应高度 */
+    #stageAromaApp .stage-wrapper-app {
+      position: relative; width: 100%; 
+      margin-bottom: 24px; cursor: grab; touch-action: none; overflow: hidden; border-radius: 4px;
+    }
+    #stageAromaApp .stage-wrapper-app:active { cursor: grabbing; }
+    #stageAromaApp .bubble-network-svg { width: 100%; height: auto; display: block; }
+    #stageAromaApp .stage-hint { position: absolute; top: 5px; right: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; opacity: 0.8; }
+
+    #stageAromaApp .bubble-node { cursor: pointer; transition: opacity 0.2s; }
+    #stageAromaApp .bubble-node circle { stroke: none !important; }
+    #stageAromaApp .bubble-link { transition: opacity 0.2s, stroke-width 0.2s; }
+    #stageAromaApp .bubble-network-svg.is-focusing .bubble-node { opacity: 0.16 !important; }
+    #stageAromaApp .bubble-network-svg.is-focusing .bubble-node.is-active { opacity: 1 !important; }
+    #stageAromaApp .bubble-network-svg.is-focusing .bubble-link { opacity: 0.08 !important; }
+    #stageAromaApp .bubble-network-svg.is-focusing .bubble-link.is-active { opacity: 0.95 !important; stroke-width: 2.2px !important; }
+
+    #stageAromaApp .detail-drawer {
+      position: absolute; bottom: 110px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.98);
+      border: 1px solid var(--border-soft); padding: 12px 16px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transform: translateY(8px); opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); z-index: 99;
+    }
+    #stageAromaApp .detail-drawer.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    #stageAromaApp .drawer-top {
+      display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-dashed);
+      padding-bottom: 6px; margin-bottom: 8px;
+    }
+    #stageAromaApp .drawer-title { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    #stageAromaApp .drawer-en { font-size: 11px; color: var(--text-muted); font-style: italic; margin-left: 6px; }
+    #stageAromaApp .drawer-close { border: none; background: transparent; cursor: pointer; font-size: 18px; color: var(--text-muted); line-height: 1; }
+    #stageAromaApp .drawer-desc { font-size: 12.5px; color: #4e4944; margin-bottom: 8px; line-height: 1.5; }
+    #stageAromaApp .drawer-tags { display: flex; gap: 6px; }
+    #stageAromaApp .drawer-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(212, 206, 196, 0.35); color: #5c554e; }
+
+    #stageAromaApp .table-scroll {
+      width: 100%; max-height: 200px; overflow-y: auto; scrollbar-gutter: stable; border-top: 1px solid var(--border-soft);
+      padding-top: 8px; scrollbar-width: thin; scrollbar-color: var(--border-soft) transparent;
+    }
+    #stageAromaApp .table-scroll::-webkit-scrollbar { width: 4px; }
+    #stageAromaApp .table-scroll::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 2px; }
+    #stageAromaApp .compound-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    #stageAromaApp .compound-table th {
+      text-align: left; font-weight: 500; color: var(--text-muted); font-size: 12px; padding: 8px 0;
+      position: sticky; top: 0; background: #f7f4ee; border-bottom: 1px solid #e0dcd5;
+    }
+    #stageAromaApp .compound-table td { padding: 10px 0; border-bottom: 1px dashed var(--border-dashed); cursor: pointer; transition: background 0.15s; }
+    #stageAromaApp .compound-table tr.is-highlight td { background-color: rgba(234, 83, 120, 0.1); color: #b0234a; font-weight: 500; }
+    #stageAromaApp .compound-table td.col-intensity { text-align: right; padding-right: 8px; font-family: "Times New Roman", Times, serif; color: var(--accent-red); }
+  </style>
+</head>
+<body>
+
+  <aside class="timeline-rail">
+    <div class="timeline-line"></div>
+    <div class="timeline-dot" id="timelineDot" title="点击返回顶部"></div>
+    <div class="timeline-numbers">
+      <span class="roman-num" id="node-I" style="top: 260px;" title="Stage 1">I</span>
+      <span class="roman-num" id="node-II" style="top: 380px;" title="Stage 2">II</span>
+      <span class="roman-num" id="node-III" style="top: 500px;" title="Stage 3">III</span>
+      <span class="roman-num" id="node-IV" style="top: 620px;" title="Stage 4">IV</span>
+    </div>
+  </aside>
+
+  <main class="poster-viewport">
+
+    <section class="stage-zero" id="stageZeroSection">
+      <div class="section-visual">
+        <div class="header-en">LITCHI CHINENSIS<br>GUIWEI</div>
+        <div class="circle-card">
+          <img src="lychee.png" alt="桂味" class="lychee-img">
+        </div>
+      </div>
+      <div class="section-overview-text">
+        <h1 class="calligraphy-title scroll-reveal">桂味</h1>
+        <div class="info-list scroll-reveal">
+          <div class="info-row"><span class="info-label">分布/</span><span class="info-value">广东、广西、台湾</span></div>
+          <div class="info-row"><span class="info-label">时间/</span><span class="info-value">六月下旬</span></div>
+          <div class="info-row"><span class="info-label">香味/</span><span class="info-value">桂花香</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-one" id="stageOneSection">
+      <div class="stage1-narrow-center-column">
+        <div class="intro-stamp-box scroll-reveal"><span class="intro-stamp-text">簡 介</span></div>
+        <p class="stage1-paragraph-origin scroll-reveal">因果肉含桂花香味，故称“桂味”。 老树果实的果肩上常有墨绿色斑块，果皮淡红带绿，故有称“鸭头绿”。 桂味是中国广东优良品种之一，广西何时引入无法查考。</p>
+        <p class="stage1-paragraph-region scroll-reveal">广西百色县四塘从广东引种已有200多年历史。解放前后，各地均有零星引种，1964年南宁市柳沙园艺场从广州市郊较大量地引入，成片种植。</p>
+      </div>
+
+      <div class="stage1-wide-illustration scroll-reveal">
+        <div class="stage1-branch-reveal" id="stage1BranchReveal">
+          <img src="stage1_branches_bg.png" alt="荔枝枝头插画" class="stage1-branch-base" onerror="this.style.display='none'; this.parentElement.style.height='240px'; this.parentElement.style.background='#bcc5bc';">
+          <img src="stage1_branches_hover.png" alt="荔枝枝头细节" class="stage1-branch-top" style="--hover-top: 0%; --hover-left: 0%; --hover-width: 100%; --hover-height: 100%;" onerror="this.style.display='none';">
+        </div>
+      </div>
+
+      <div class="stage1-poetry-hero scroll-reveal">
+        <div class="stage1-poetry-line">
+          <span class="char-mask"><span class="char" style="transition-delay: 0.0s;">先</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.08s;">生</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.16s;">洗</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.24s;">盏</span></span>
+        </div>
+        <div class="stage1-poetry-line">
+          <span class="char-mask"><span class="char" style="transition-delay: 0.4s;">酌</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.48s;">桂</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.56s;">醑</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.64s;">，</span></span>
+        </div>
+        <div class="stage1-poetry-line">
+          <span class="char-mask"><span class="char" style="transition-delay: 0.8s;">冰</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.88s;">盘</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 0.96s;">荐</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 1.04s;">此</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 1.12s;">赪</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 1.20s;">虬</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 1.28s;">珠</span></span>
+          <span class="char-mask"><span class="char" style="transition-delay: 1.36s;">。</span></span>
+        </div>
+      </div>
+
+      <div class="stage1-rider-section">
+        <div class="rider-art-box scroll-reveal">
+          <img src="stage1_rider.png" alt="一骑红尘妃子笑" onerror="this.style.display='none'; this.parentElement.style.height='220px'; this.parentElement.style.background='#dcd7ce';">
+        </div>
+        <div class="rider-story-text scroll-reveal">
+          <p>桂味荔枝母树位于广东省茂名市高州市大井镇木广垌村委会大埇口自然村.据族谱记载，该树于南宋时期由刘氏先祖种植，现存5棵第一代古树中以此棵保存最为完整。根据多方记载及专家考察，该母树树龄已超过800年，甚至有研究认为可能超过千年。</p>
+          <p>20世纪50年代，村民在周边战壕遗址旁扩种母树后代，形成初代种植园区。1980年代后期大规模推广圈枝育苗技术，将种植面积从200亩扩展至当前规模。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-two" id="stageTwoSection">
+      <div class="stage2-layout-grid">
+        <div class="stage2-left-block">
+          <div class="scroll-reveal">
+            <svg class="tss-ruler-svg" viewBox="0 0 160 16" fill="none" stroke="#cfcbc2" stroke-width="1.2">
+              <line x1="0" y1="2" x2="160" y2="2"/><line x1="0" y1="2" x2="0" y2="16"/><line x1="16" y1="2" x2="16" y2="9"/><line x1="32" y1="2" x2="32" y2="9"/><line x1="48" y1="2" x2="48" y2="9"/><line x1="64" y1="2" x2="64" y2="9"/><line x1="80" y1="2" x2="80" y2="16"/><line x1="96" y1="2" x2="96" y2="9"/><line x1="112" y1="2" x2="112" y2="9"/><line x1="128" y1="2" x2="128" y2="9"/><line x1="144" y1="2" x2="144" y2="9"/><line x1="160" y1="2" x2="160" y2="16"/>
+            </svg>
+          </div>
+          <h2 class="tss-title scroll-reveal">甜度等級</h2>
+          <p class="tss-description scroll-reveal">可溶性固形物（TSS）主要是指可溶性糖类，测定可溶性固形物可以衡量水果成熟情况</p>
+
+          <div class="ct-stage scroll-reveal" id="ctStage">
+            <div class="ct-fruit-pair" id="ctFruitPair">
+              <img src="stage2_ct.png" alt="CT 扫描荔枝" class="ct-bg-img" id="ctBgImg">
+                <div class="ct-lens" id="ctLens" title="按住可自由拖拽扫描各截面">
+                  <img src="stage2_cross.png" alt="解剖截面" class="ct-lens-img" id="ctLensImg">
+                  <div class="lens-corners"><i></i><i></i><i></i><i></i></div>
+                  <div class="lens-crosshair"><span class="crosshair-icon">✥</span></div>
+              </div>
+            </div>
+            <svg class="ct-leads-svg" id="ctLeadsSvg"><polyline id="ctPolyline" class="lead-polyline" points="0,0 0,0 0,0" /></svg>
+            <div class="tss-badge-box" id="tssBadgeBox">
+              <span class="tss-badge-label">TSS</span>
+              <span class="tss-badge-value" id="tssVal">20.7%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage2-right-col scroll-reveal">
+          <div class="stage2-metrics-block">
+            <h3 class="metrics-header">检测数据</h3>
+            <div class="metrics-row">
+              <span class="metrics-label">果核横径</span>
+              <span class="metrics-value"><span id="pulpDiameter">9.00</span> <span class="metrics-unit">mm</span></span>
+            </div>
+            <div class="metrics-row">
+              <span class="metrics-label">果肉厚度</span>
+              <span class="metrics-value"><span id="peelThickness">11.00</span> <span class="metrics-unit">mm</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-three-one" id="stageThreeOneSection">
+      <div class="stage3-1-canvas scroll-reveal" id="stage31Canvas">
+        <div class="stage3-1-left-chart">
+          <svg class="flavor-matrix-svg" id="flavorMatrixSvg" viewBox="0 0 680 640"></svg>
+        </div>
+        <div class="stage3-1-right-content">
+          <div class="stage3-1-title-row">
+            <h2 class="stage3-1-calligraphy-title">鮮味變化圖</h2>
+            <button class="replay-seq-btn" id="replaySeqBtn" title="重新播放">▶ 重播</button>
+          </div>
+          <div class="stage3-1-paragraphs-wrap">
+            <div class="para-lead">常温（25℃）条件下<br>八个品种在贮藏期间<br>的鲜味指数（UI，<br>mg/kg）变化</div>
+            <div class="para-detail">常温下各品种鲜味指数<br>在0-1d均有微幅上升，<br>因蛋白质分解释放游离<br>氨基酸，随后持续下<br>降。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-three-two" id="stageThreeTwoSection">
+      <div class="stage3-2-canvas scroll-reveal" id="stage32Canvas">
+        <div class="stage3-2-top-bar">
+          <div class="stage3-2-narrative-group">
+            <div class="narrative-block-1">从整体趋势看，冷藏14天<br>所有品种保留率均超过<br>93%，多数达到95%以<br>上，说明短期冷藏对荔枝<br>保鲜效果极佳。常温6天<br>所有品种保留率均低于<br>65%，荔枝极易劣变。</div>
+            <div class="narrative-block-2">对冷链物流和销售策略而<br>言，耐储品种可适当延长冷藏<br>周期，而敏感品种需更短周转<br>时间。</div>
+          </div>
+          <div class="stage3-2-header-group">
+            <div class="stage3-2-title-line">
+              <span class="stage3-2-shufa-title">常温</span>
+              <span class="stage3-2-vs">VS</span>
+              <span class="stage3-2-shufa-title">冷藏鮮味保留率對比</span>
+            </div>
+            <div class="stage3-2-subtitle">以采收当日（0d）鲜味指数为100%，计算各品种在贮藏终点的鲜味保留率</div>
+          </div>
+        </div>
+        <div class="stage3-2-bottom-area" id="stage32BottomArea">
+          <svg class="stage32-unified-svg" id="stage32UnifiedSvg" viewBox="0 0 660 350"></svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-three-three" id="stageThreeThreeSection">
+      <div class="stage-wrapper scroll-reveal" id="stage33Canvas">
+        <header class="stage-header">
+          <h2 class="stage-shufa-title">甜度</h2>
+          <div class="stage-divider-line"></div>
+          <div class="stage-subtitle">可溶性固形物 (TSS) 范围对比</div>
+          <div class="dim-toggle-bar">
+            <button class="dim-btn active" id="btn2D" onclick="setDimensionMode(false)">2D 平面</button>
+            <button class="dim-btn" id="btn3D" onclick="setDimensionMode(true)">3D 立体柱</button>
+          </div>
+        </header>
+        <div class="chart-stage-wrap" id="chartStageWrap">
+          <div class="scent-flag" id="scentFlagCard">
+            <span class="flag-flavor" id="flagFlavor">清甜带微香</span>
+            <span class="flag-tss" id="flagTss">16.5 – 19.0 °Bx</span>
+          </div>
+          <div class="matrix-scene">
+            <div class="matrix-grid-table" id="matrixGridTable">
+              <div class="scale-header-row" id="scaleHeaderRow"></div>
+            </div>
+          </div>
+          <div class="stage-hint">拖拽旋转 · 滚轮缩放 · 双击复位</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 香气图谱，整体缩放到 80% -->
+    <div id="stageAromaApp">
+      <div class="aroma-container">
+        <header class="page-header">
+          <h1 class="page-title">香气化合物图谱</h1>
+          <p class="page-subtitle">Litchi Chinensis · Volatile Compounds Topology</p>
+        </header>
+
+        <div class="main-mode-wrap">
+          <div class="main-mode-track" id="mainModeTrack">
+            <div class="main-mode-thumb" id="mainModeThumb"></div>
+            <button class="mode-slot active" id="btnModeOverview" onclick="window._aromaApp.switchMainMode(0)">全景</button>
+            <button class="mode-slot" id="btnModeDetail" onclick="window._aromaApp.switchMainMode(1)">微观</button>
+          </div>
+        </div>
+
+        <main class="main-viewport">
+          <div class="view-panel active" id="panelOverview">
+            <div class="card-shell">
+              <div class="card-head">
+                <h2>品种风味轮廓多维雷达</h2>
+                <span id="radarStateTip">点击项直接切换至微观</span>
+              </div>
+              <div class="radar-svg-box">
+                <svg class="radar-svg" id="radarSvg" viewBox="0 0 340 215"></svg>
+              </div>
+              <div class="radar-legend-grid" id="radarLegendGrid"></div>
+            </div>
+          </div>
+
+          <div class="view-panel" id="panelDetail">
+            <div class="slider-track-wrap">
+              <div class="variety-slider-track" id="varietyTrack">
+                <div class="slider-thumb" id="sliderThumb"></div>
+              </div>
+            </div>
+
+            <div class="card-shell" style="user-select: none;">
+              <div class="card-head">
+                <div>
+                  <h2 id="detailVarietyTitle">妃子笑</h2>
+                  <span id="detailVarietySub">柑橘前调 · 辛木尾韵</span>
+                </div>
+                <div class="dim-toggle">
+                  <button class="dim-btn active" id="btn2D-app" onclick="window._aromaApp.setDim('2D')">平面 2D</button>
+                  <button class="dim-btn" id="btn3D-app" onclick="window._aromaApp.setDim('3D')">立体 3D</button>
+                </div>
+              </div>
+
+              <div class="stage-wrapper-app" id="stageWrapper">
+                <span class="stage-hint" id="stageHint">拖拽调位 · 单击节点</span>
+                <svg class="bubble-network-svg" id="networkSvg" viewBox="0 0 540 255">
+                  <defs>
+                    <marker id="arrowHead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                      <path d="M 0 2 L 8 5 L 0 8 z" fill="#8F9F8E" opacity="0.85"/>
+                    </marker>
+                    <radialGradient id="cel-soft-pink" cx="35%" cy="30%" r="62%">
+                      <stop offset="60%" stop-color="#f8c3c7" />
+                      <stop offset="60%" stop-color="#dba1a6" />
+                      <stop offset="100%" stop-color="#dba1a6" />
+                    </radialGradient>
+                    <radialGradient id="cel-coral" cx="35%" cy="30%" r="62%">
+                      <stop offset="60%" stop-color="#f46f70" />
+                      <stop offset="60%" stop-color="#ce5152" />
+                      <stop offset="100%" stop-color="#ce5152" />
+                    </radialGradient>
+                    <radialGradient id="cel-berry" cx="35%" cy="30%" r="62%">
+                      <stop offset="60%" stop-color="#ea5378" />
+                      <stop offset="60%" stop-color="#be3054" />
+                      <stop offset="100%" stop-color="#be3054" />
+                    </radialGradient>
+                    <radialGradient id="cel-plum" cx="35%" cy="30%" r="62%">
+                      <stop offset="60%" stop-color="#4a2253" />
+                      <stop offset="60%" stop-color="#280b2f" />
+                      <stop offset="100%" stop-color="#280b2f" />
+                    </radialGradient>
+                  </defs>
+                  <g id="orbitGroup" style="opacity: 0; transition: opacity 0.4s ease; pointer-events: none;"></g>
+                  <g id="linksGroup" stroke="#8F9F8E" stroke-width="1.3" fill="none"></g>
+                  <g id="nodesGroup"></g>
+                </svg>
+              </div>
+
+              <div class="detail-drawer" id="detailDrawer">
+                <div class="drawer-top">
+                  <div>
+                    <span class="drawer-title" id="drawerTitle">化合物</span>
+                    <span class="drawer-en" id="drawerEn">EN</span>
+                  </div>
+                  <button class="drawer-close" id="drawerCloseBtn" onclick="window._aromaApp.closeDrawer()">&times;</button>
+                </div>
+                <div class="drawer-desc" id="drawerBody">成分简述</div>
+                <div class="drawer-tags" id="drawerTags"></div>
+              </div>
+
+              <div class="table-scroll">
+                <table class="compound-table">
+                  <thead>
+                    <tr>
+                      <th>成分</th>
+                      <th style="text-align: right; padding-right: 6px;">特征量</th>
+                    </tr>
+                  </thead>
+                  <tbody id="compoundTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <section class="stage-three-four" id="stageThreeFourSection">
+      <div class="stage3-4-canvas" id="stage34Canvas">
+        <h2 class="stage3-4-title">果實大小</h2>
+        <div class="stage3-4-chart-box">
+          <div class="stage3-4-legend">
+            <div class="stage3-4-legend-item">
+              <div class="legend-box-peel"></div>
+              <span class="legend-text-peel">果皮</span>
+            </div>
+            <div class="stage3-4-legend-item">
+              <div class="legend-box-pulp"></div>
+              <span class="legend-text-pulp">果肉</span>
+            </div>
+          </div>
+          <svg class="stage3-4-svg" id="stage34Svg" viewBox="0 0 880 400"></svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-three-five" id="stageThreeFiveSection">
+      <div class="stage3-5-canvas" id="stage35Canvas">
+        <div class="stage3-5-chart-box">
+          <svg class="stage3-5-svg" id="stage35Svg" viewBox="0 0 880 340"></svg>
+        </div>
+        <div class="stage3-5-bottom-desc">
+          <h2 class="stage3-5-shufa-title">上火指數</h2>
+          <p class="stage3-5-desc-line">本表列出8个荔枝品种的上火倾向指数（UI，0-100）。</p>
+          <p class="stage3-5-desc-line">UI综合糖度实测、传统温性认知及甜度感知评定，数值越高表示越易上火。分级为参考性划分，实际反应因人而异。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-four" id="stageFourSection">
+      <div class="stage4-canvas scroll-reveal" id="stage4Canvas">
+        <div class="stage4-top-poetry-row">
+          <div class="stage4-poetry-wrap">
+            <div class="stage4-poetry-line">日啖荔枝三百顆，</div>
+            <div class="stage4-poetry-line">不辭長作</div>
+            <div class="stage4-poetry-line">嶺南人。</div>
+          </div>
+          <a href="peel.html" class="peel-link-btn" title="点击前往剥荔枝交互">
+            <span class="peel-link-text">剥荔枝</span>
+            <svg class="peel-arrow-svg" viewBox="0 0 130 12" fill="none">
+              <line x1="0" y1="6" x2="122" y2="6" stroke="#9d4637" stroke-width="1.2" />
+              <polyline points="116,1 122,6 116,11" stroke="#9d4637" stroke-width="1.2" fill="none" />
+            </svg>
+          </a>
+        </div>
+        <div class="stage4-bottom-art-box">
+          <div class="stage4-green-rect"></div>
+          <img src="stage4_lychee.png" alt="日啖荔枝插画" class="stage4-lychee-cluster-img" onerror="this.style.display='none';">
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* =========================================================
+       0. 全局参数
+       ========================================================= */
+    const STAGE3_5_CONFIG = { offsetY: -80 };
+    const stage35CanvasEl = document.getElementById('stage35Canvas');
+    if (stage35CanvasEl) stage35CanvasEl.style.transform = `translateY(${STAGE3_5_CONFIG.offsetY}px)`;
+
+    const STAGE2_CT_CONFIG = { scale: 0.76, offsetX: 70, offsetY: 40 };
+    const STAGE3_1_CONFIG = { startX: 225, stepX: 40, bubbleR: 28 };
+    const STAGE3_2_CONFIG = { maxWidth: 630, marginRight: 30, blockSize: 53, colGap: 10 };
+    const CROSS_CONFIG = { scale: 1.15, offsetX: -15, offsetY: 16 };
+
+    /* =========================================================
+       2. 动态标尺
+       ========================================================= */
+    const dot = document.getElementById('timelineDot');
+    const nodeI = document.getElementById('node-I');
+    const nodeII = document.getElementById('node-II');
+    const nodeIII = document.getElementById('node-III');
+    const nodeIV = document.getElementById('node-IV');
+
+    const stageZero = document.getElementById('stageZeroSection');
+    const stageOne = document.getElementById('stageOneSection');
+    const stageTwo = document.getElementById('stageTwoSection');
+    const stageThree = document.getElementById('stageThreeOneSection');
+    const stageFour = document.getElementById('stageFourSection');
+
+    const START_Y = 140, I_Y = 260, II_Y = 380, III_Y = 500, IV_Y = 620;
+
+    function updateTimelineDot() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const bp1 = stageOne.offsetTop - (window.innerHeight * 0.15);
+      const bp2 = stageTwo.offsetTop - (window.innerHeight * 0.15);
+      const bp3 = stageThree.offsetTop - (window.innerHeight * 0.15);
+      const bp4 = stageFour.offsetTop - (window.innerHeight * 0.25);
+
+      let currentY;
+      if (scrollTop <= bp1) {
+        const p = bp1 > 0 ? Math.min(Math.max(scrollTop / bp1, 0), 1) : 0;
+        currentY = START_Y + p * (I_Y - START_Y);
+      } else if (scrollTop <= bp2) {
+        const p = (bp2 - bp1) > 0 ? Math.min(Math.max((scrollTop - bp1) / (bp2 - bp1), 0), 1) : 0;
+        currentY = I_Y + p * (II_Y - I_Y);
+      } else if (scrollTop <= bp3) {
+        const p = (bp3 - bp2) > 0 ? Math.min(Math.max((scrollTop - bp2) / (bp3 - bp2), 0), 1) : 0;
+        currentY = II_Y + p * (III_Y - II_Y);
+      } else if (scrollTop <= bp4) {
+        const p = (bp4 - bp3) > 0 ? Math.min(Math.max((scrollTop - bp3) / (bp4 - bp3), 0), 1) : 0;
+        currentY = III_Y + p * (IV_Y - III_Y);
+      } else {
+        currentY = IV_Y;
+      }
+
+      dot.style.top = `${currentY}px`;
+      if (currentY >= (I_Y - 4)) nodeI.classList.add('is-active'); else nodeI.classList.remove('is-active');
+      if (currentY >= (II_Y - 4)) nodeII.classList.add('is-active'); else nodeII.classList.remove('is-active');
+      if (currentY >= (III_Y - 4)) nodeIII.classList.add('is-active'); else nodeIII.classList.remove('is-active');
+      if (currentY >= (IV_Y - 4)) nodeIV.classList.add('is-active'); else nodeIV.classList.remove('is-active');
+    }
+
+    /* 进度条红点磁吸 */
+    let dotMouseX = -1000;
+    let dotMouseY = -1000;
+    window.addEventListener('mousemove', (e) => {
+      dotMouseX = e.clientX;
+      dotMouseY = e.clientY;
+    });
+
+    function updateDotMagnet() {
+      if (!dot) return;
+      const rect = dot.getBoundingClientRect();
+      if (rect.width === 0) { requestAnimationFrame(updateDotMagnet); return; }
+
+      const dotCX = rect.left + rect.width / 2;
+      const dotCY = rect.top + rect.height / 2;
+      const dx = dotMouseX - dotCX;
+      const dy = dotMouseY - dotCY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const MAGNET_RADIUS = 90;
+      const MAX_PULL = 10;
+
+      if (dist < MAGNET_RADIUS) {
+        dot.classList.add('is-hovering');
+        const pullFactor = (1 - dist / MAGNET_RADIUS);
+        const pull = pullFactor * MAX_PULL;
+        const angle = Math.atan2(dy, dx);
+        const mx = Math.cos(angle) * pull;
+        const my = Math.sin(angle) * pull;
+        dot.style.setProperty('--mag-x', `${mx.toFixed(2)}px`);
+        dot.style.setProperty('--mag-y', `${my.toFixed(2)}px`);
+      } else {
+        if (dot.classList.contains('is-hovering')) {
+          dot.classList.remove('is-hovering');
+          dot.style.setProperty('--mag-x', '0px');
+          dot.style.setProperty('--mag-y', '0px');
+        }
+      }
+      requestAnimationFrame(updateDotMagnet);
+    }
+    requestAnimationFrame(updateDotMagnet);
+    
+    window.addEventListener('scroll', updateTimelineDot, { passive: true });
+    updateTimelineDot();
+
+    dot.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    nodeI.addEventListener('click', () => stageOne.scrollIntoView({ behavior: 'smooth' }));
+    nodeII.addEventListener('click', () => stageTwo.scrollIntoView({ behavior: 'smooth' }));
+    nodeIII.addEventListener('click', () => stageThree.scrollIntoView({ behavior: 'smooth' }));
+    nodeIV.addEventListener('click', () => stageFour.scrollIntoView({ behavior: 'smooth' }));
+
+    /* =========================================================
+       3. 双向可重播 IntersectionObserver
+       ========================================================= */
+    let stage32Timers = [];
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          if (entry.target.id === 'stage31Canvas') triggerMatrixWaveAnimation();
+          if (entry.target.id === 'stage32Canvas') triggerStage32RowStagger();
+        } else {
+          entry.target.classList.remove('is-visible');
+          if (entry.target.id === 'stage32Canvas') {
+            stage32Timers.forEach(t => clearTimeout(t));
+            stage32Timers = [];
+            document.querySelectorAll('.compare-block-group').forEach(g => g.classList.remove('is-row-visible'));
+          }
+        }
+      });
+    }, { root: null, rootMargin: "0px 0px -15% 0px", threshold: 0.1 });
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+    /* =========================================================
+       4. Stage 1 双层图悬停模糊圆遮罩 + 入屏自动演示
+       ========================================================= */
+    (function initStage1BranchReveal() {
+      const wrap = document.getElementById('stage1BranchReveal');
+      if (!wrap) return;
+      const topImg = wrap.querySelector('.stage1-branch-top');
+      if (!topImg) return;
+
+      let rafId = null;
+      let mouseClient = null;
+      let autoDemoRaf = null;
+      let hasAutoPlayed = false;
+
+      function applyReveal() {
+        rafId = null;
+        if (!mouseClient) return;
+        const rect = wrap.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const xPct = ((mouseClient.x - rect.left) / rect.width) * 100;
+        const yPct = ((mouseClient.y - rect.top) / rect.height) * 100;
+        const radius = Math.max(70, Math.min(150, rect.width * 0.28));
+        topImg.style.setProperty('--reveal-x', `${xPct}%`);
+        topImg.style.setProperty('--reveal-y', `${yPct}%`);
+        topImg.style.setProperty('--reveal-r', `${radius}px`);
+      }
+
+      function stopAutoDemo() {
+        if (autoDemoRaf) { cancelAnimationFrame(autoDemoRaf); autoDemoRaf = null; }
+        wrap.classList.remove('is-auto-demo');
+      }
+
+      wrap.addEventListener('mouseenter', (e) => {
+        stopAutoDemo();
+        wrap.classList.add('is-hovering');
+        mouseClient = { x: e.clientX, y: e.clientY };
+        if (rafId === null) rafId = requestAnimationFrame(applyReveal);
+      });
+
+      wrap.addEventListener('mousemove', (e) => {
+        stopAutoDemo();
+        mouseClient = { x: e.clientX, y: e.clientY };
+        if (rafId === null) rafId = requestAnimationFrame(applyReveal);
+      });
+
+      wrap.addEventListener('mouseleave', () => {
+        wrap.classList.remove('is-hovering');
+        mouseClient = null;
+      });
+
+      wrap.addEventListener('touchstart', (e) => {
+        stopAutoDemo();
+        if (!e.touches[0]) return;
+        wrap.classList.add('is-hovering');
+        mouseClient = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (rafId === null) rafId = requestAnimationFrame(applyReveal);
+      }, { passive: true });
+
+      wrap.addEventListener('touchmove', (e) => {
+        stopAutoDemo();
+        if (!e.touches[0]) return;
+        mouseClient = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (rafId === null) rafId = requestAnimationFrame(applyReveal);
+      }, { passive: true });
+
+      wrap.addEventListener('touchend', () => {
+        wrap.classList.remove('is-hovering');
+        mouseClient = null;
+      });
+
+      const demoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !hasAutoPlayed) {
+            hasAutoPlayed = true;
+            setTimeout(runAutoDemo, 50);
+          }
+        });
+      }, { threshold: 0.4 });
+
+      demoObserver.observe(wrap);
+
+      function runAutoDemo() {
+        if (wrap.classList.contains('is-hovering')) return;
+        wrap.classList.add('is-auto-demo');
+        const startTime = performance.now();
+        const duration = 1800; 
+        
+        function animateDemo(time) {
+          if (wrap.classList.contains('is-hovering')) { stopAutoDemo(); return; }
+          const elapsed = time - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          if (progress >= 1) {
+            stopAutoDemo();
+            topImg.style.removeProperty('--reveal-x');
+            topImg.style.removeProperty('--reveal-y');
+            topImg.style.removeProperty('--reveal-r');
+            return;
+          }
+
+          let t = progress;
+          t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          const x = 15 + t * 70;
+          const y = 50 + Math.sin(t * Math.PI * 2) * 15;
+          const r = 80 + Math.sin(t * Math.PI) * 30;
+
+          topImg.style.setProperty('--reveal-x', `${x}%`);
+          topImg.style.setProperty('--reveal-y', `${y}%`);
+          topImg.style.setProperty('--reveal-r', `${r}px`);
+          autoDemoRaf = requestAnimationFrame(animateDemo);
+        }
+        autoDemoRaf = requestAnimationFrame(animateDemo);
+      }
+    })();
+
+    /* =========================================================
+       5. Stage 2 CT 与镜头拖拽 + 入屏轻弹位移
+       ========================================================= */
+    const ctStage = document.getElementById('ctStage');
+    const ctFruitPair = document.getElementById('ctFruitPair');
+    const ctLens = document.getElementById('ctLens');
+    const ctLensImg = document.getElementById('ctLensImg');
+    const ctPolyline = document.getElementById('ctPolyline');
+    const tssBadgeBox = document.getElementById('tssBadgeBox');
+    const tssVal = document.getElementById('tssVal');
+    const pulpDiameter = document.getElementById('pulpDiameter');
+    const peelThickness = document.getElementById('peelThickness');
+
+    function applyCtPairTransform() {
+      if (!ctFruitPair) return;
+      ctFruitPair.style.transform = `translate(${STAGE2_CT_CONFIG.offsetX}px, ${STAGE2_CT_CONFIG.offsetY}px) scale(${STAGE2_CT_CONFIG.scale})`;
+    }
+    applyCtPairTransform();
+
+    let hasNudged = false;
+    const ctStageEl = document.getElementById('ctStage');
+
+    if (ctStageEl) {
+      const nudgeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !hasNudged) {
+            hasNudged = true;
+            setTimeout(triggerLensNudge, 800);
+          }
+        });
+      }, { threshold: 0.5 });
+      nudgeObserver.observe(ctStageEl);
+    }
+
+    function triggerLensNudge() {
+      if (!ctLens) return;
+      const initL = ctLens.offsetLeft;
+      const initT = ctLens.offsetTop;
+      ctLens.style.transition = 'left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      ctLens.style.left = `${initL + 25}px`;
+      ctLens.style.top = `${initT + 25}px`;
+      ctLens.classList.add('is-nudging');
+      
+      let nudgeStart = performance.now();
+      function animateNudgeOut() {
+        updateCtLensAndMetrics();
+        if (performance.now() - nudgeStart < 500) requestAnimationFrame(animateNudgeOut);
+      }
+      requestAnimationFrame(animateNudgeOut);
+      
+      setTimeout(() => {
+        ctLens.style.transition = 'left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        ctLens.style.left = `${initL}px`;
+        ctLens.style.top = `${initT}px`;
+        
+        nudgeStart = performance.now();
+        function animateNudgeBack() {
+          updateCtLensAndMetrics();
+          if (performance.now() - nudgeStart < 800) {
+            requestAnimationFrame(animateNudgeBack);
+          } else {
+            ctLens.style.transition = 'none'; 
+            ctLens.classList.remove('is-nudging');
+          }
+        }
+        requestAnimationFrame(animateNudgeBack);
+      }, 900);
+    }
+    
+    function updateCtLensAndMetrics() {
+      if (!ctStage || !ctLens) return;
+
+      const stageW = ctStage.offsetWidth;
+      const stageH = ctStage.offsetHeight;
+      const lensX = ctLens.offsetLeft;
+      const lensY = ctLens.offsetTop;
+      const lensW = ctLens.offsetWidth;
+      const lensH = ctLens.offsetHeight;
+
+      ctLensImg.style.width = `${stageW * CROSS_CONFIG.scale}px`;
+      ctLensImg.style.transform = `translate(${-lensX + CROSS_CONFIG.offsetX}px, ${-lensY + CROSS_CONFIG.offsetY}px)`;
+
+      const s = STAGE2_CT_CONFIG.scale || 1;
+      const ox = STAGE2_CT_CONFIG.offsetX || 0;
+      const oy = STAGE2_CT_CONFIG.offsetY || 0;
+
+      const realLensX = ox + lensX * s;
+      const realLensY = oy + lensY * s;
+      const realLensW = lensW * s;
+      const realLensH = lensH * s;
+
+      const startX = realLensX + realLensW;
+      const startY = realLensY + realLensH * 0.7;
+
+      const badgeW = tssBadgeBox.offsetWidth || 105;
+      const badgeH = tssBadgeBox.offsetHeight || 28;
+
+      const bendX = Math.max(stageW * 0.65, stageW * 0.70);
+      const endX = Math.min(bendX + badgeW + 8, stageW - 2);
+
+      const normY = Math.max(0, Math.min(1, realLensY / (stageH * 0.65)));
+      let targetY = stageH * 0.70 + (normY - 0.5) * (stageH * 0.25);
+
+      const isEncroaching = (realLensX + realLensW) > (bendX - 25);
+      if (isEncroaching) {
+        if ((stageH - (realLensY + realLensH)) >= (badgeH + 20)) {
+          targetY = Math.max(targetY, realLensY + realLensH + badgeH + 14);
+        } else {
+          targetY = Math.min(targetY, realLensY - 12);
+        }
+      } else {
+        targetY = Math.max(targetY, realLensY + realLensH * 0.5 + 16);
+      }
+      targetY = Math.min(Math.max(targetY, stageH * 0.65), stageH - 6);
+
+      ctPolyline.setAttribute('points', `${startX},${startY} ${bendX},${targetY} ${endX},${targetY}`);
+      tssBadgeBox.style.left = `${bendX + 2}px`;
+      tssBadgeBox.style.top = `${targetY - badgeH - 2}px`;
+
+      const depth = Math.max(0, Math.min(1, (lensY + lensH / 2) / stageH)); 
+      let currentPeel = 1.18;
+      if (depth < 0.25) {
+        currentPeel = 1.25 + (depth / 0.25) * (1.28 - 1.25);
+      } else if (depth < 0.5) {
+        currentPeel = 1.28 + ((depth - 0.25) / 0.25) * (1.18 - 1.28);
+      } else if (depth < 0.75) {
+        currentPeel = 1.18 + ((depth - 0.5) / 0.25) * (1.40 - 1.18);
+      } else {
+        currentPeel = 1.40;
+      }
+      if (peelThickness) peelThickness.textContent = currentPeel.toFixed(2);
+
+      const horizontalRatio = Math.max(0, Math.min(1, (lensX + lensW / 2) / stageW));
+      const nutDiameter = 10.69 + horizontalRatio * (12.36 - 10.69);
+      const currentPulpDiam = 19.92 - nutDiameter;
+      if (pulpDiameter) pulpDiameter.textContent = currentPulpDiam.toFixed(2);
+
+      const distFromMid = Math.abs(depth - 0.5) * 2;
+      if (tssVal) tssVal.textContent = `${Math.round(19.3 - distFromMid * 1.5)}%`;
+    }
+    
+    let isDraggingLens = false;
+    let lensStartX = 0, lensStartY = 0;
+    let lensInitLeft = 0, lensInitTop = 0;
+    let moveRafId = null;
+
+    function onLensMove(e) {
+      if (!isDraggingLens) return;
+      if (e.cancelable) e.preventDefault();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      const s = STAGE2_CT_CONFIG.scale || 1;
+      
+      let newLeft = lensInitLeft + (cx - lensStartX) / s;
+      let newTop = lensInitTop + (cy - lensStartY) / s;
+      newLeft = Math.max(0, Math.min(newLeft, ctStage.offsetWidth - ctLens.offsetWidth));
+      newTop = Math.max(0, Math.min(newTop, ctStage.offsetHeight - ctLens.offsetHeight));
+      
+      ctLens.style.left = `${newLeft}px`;
+      ctLens.style.top = `${newTop}px`;
+      
+      if (!moveRafId) {
+        moveRafId = requestAnimationFrame(() => {
+          updateCtLensAndMetrics();
+          moveRafId = null;
+        });
+      }
+    }
+
+    function onLensEnd() {
+      isDraggingLens = false;
+      window.removeEventListener('mousemove', onLensMove);
+      window.removeEventListener('mouseup', onLensEnd);
+      window.removeEventListener('touchmove', onLensMove);
+      window.removeEventListener('touchend', onLensEnd);
+    }
+
+    function onLensStart(e) {
+      if (e.cancelable) e.preventDefault();
+      isDraggingLens = true;
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      lensStartX = cx; lensStartY = cy;
+      lensInitLeft = ctLens.offsetLeft; lensInitTop = ctLens.offsetTop;
+      window.addEventListener('mousemove', onLensMove);
+      window.addEventListener('mouseup', onLensEnd);
+      window.addEventListener('touchmove', onLensMove, { passive: false });
+      window.addEventListener('touchend', onLensEnd);
+    }
+
+    if (ctLens) {
+      ctLens.addEventListener('mousedown', onLensStart);
+      ctLens.addEventListener('touchstart', onLensStart, { passive: false });
+    }
+
+    window.addEventListener('resize', updateCtLensAndMetrics);
+    setTimeout(updateCtLensAndMetrics, 120);
+
+    /* =========================================================
+       6. Stage 3.1 鲜味变化图 + 悬浮弹性散开
+       ========================================================= */
+    const matrixSvg = document.getElementById('flavorMatrixSvg');
+    const replaySeqBtn = document.getElementById('replaySeqBtn');
+
+    const FLAVOR_PHYSICS_CONFIG = { influenceRadius: 80, repelStrength: 30, springK: 0.10, damping: 0.80, maxOffset: 45 };
+
+    const flavorCellStates = [];
+    let flavorMouse = null;
+    let flavorPhysicsRafId = null;
+
+    function initFlavorPhysics() {
+      flavorCellStates.length = 0;
+      const cells = document.querySelectorAll('#flavorMatrixSvg .flavor-bubble-cell');
+      cells.forEach(el => {
+        const outer = el.querySelector('.bubble-outer');
+        if (!outer) return;
+        flavorCellStates.push({
+          el,
+          baseX: parseFloat(outer.getAttribute('cx')),
+          baseY: parseFloat(outer.getAttribute('cy')),
+          offX: 0, offY: 0, vx: 0, vy: 0
+        });
+      });
+      if (!matrixSvg) return;
+
+      matrixSvg.addEventListener('mousemove', (e) => {
+        const pt = matrixSvg.createSVGPoint();
+        pt.x = e.clientX; pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(matrixSvg.getScreenCTM().inverse());
+        flavorMouse = { x: svgPt.x, y: svgPt.y };
+        if (flavorPhysicsRafId === null) flavorPhysicsRafId = requestAnimationFrame(updateFlavorPhysics);
+      });
+
+      matrixSvg.addEventListener('mouseleave', () => {
+        flavorMouse = null;
+        if (flavorPhysicsRafId === null) flavorPhysicsRafId = requestAnimationFrame(updateFlavorPhysics);
+      });
+    }
+
+    function updateFlavorPhysics() {
+      const { influenceRadius: R, repelStrength: strength, springK, damping, maxOffset } = FLAVOR_PHYSICS_CONFIG;
+      let hasMotion = false;
+
+      for (const s of flavorCellStates) {
+        let fx = 0, fy = 0;
+        fx -= s.offX * springK; fy -= s.offY * springK;
+
+        if (flavorMouse) {
+          const dx = s.baseX + s.offX - flavorMouse.x;
+          const dy = s.baseY + s.offY - flavorMouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < R && dist > 0.001) {
+            const f = (1 - dist / R) * strength;
+            fx += (dx / dist) * f; fy += (dy / dist) * f;
+          }
+        }
+
+        s.vx = (s.vx + fx) * damping; s.vy = (s.vy + fy) * damping;
+        s.offX += s.vx; s.offY += s.vy;
+
+        const od = Math.hypot(s.offX, s.offY);
+        if (od > maxOffset) {
+          s.offX = (s.offX / od) * maxOffset; s.offY = (s.offY / od) * maxOffset;
+          s.vx *= 0.6; s.vy *= 0.6;
+        }
+        s.el.setAttribute('transform', `translate(${s.offX.toFixed(2)}, ${s.offY.toFixed(2)})`);
+
+        if (Math.abs(s.offX) > 0.05 || Math.abs(s.offY) > 0.05 || Math.abs(s.vx) > 0.05 || Math.abs(s.vy) > 0.05) hasMotion = true;
+      }
+
+      if (hasMotion || flavorMouse) {
+        flavorPhysicsRafId = requestAnimationFrame(updateFlavorPhysics);
+      } else {
+        for (const s of flavorCellStates) {
+          s.offX = 0; s.offY = 0; s.vx = 0; s.vy = 0;
+          s.el.setAttribute('transform', 'translate(0, 0)');
+        }
+        flavorPhysicsRafId = null;
+      }
+    }
+
+    const FLAVOR_COLORS = {
+      fresh: { fill: '#fde8d7' }, color: { fill: '#de8261' }, scent: { fill: '#9e4e3e' }, taste: { fill: '#9eb098' }
+    };
+
+    const VARIETY_DATA = [
+      { name: '妃子笑', days: ['fresh', 'fresh', 'fresh', 'fresh', 'fresh', 'color'] },
+      { name: '桂味',   days: ['fresh', 'fresh', 'fresh', 'color', 'color', 'scent'] },
+      { name: '糯米糍', days: ['color', 'color', 'color', 'color', 'scent', 'scent'] },
+      { name: '白糖罂', days: ['color', 'color', 'color', 'color', 'scent', 'scent'] },
+      { name: '仙进奉', days: ['fresh', 'fresh', 'color', 'color', 'color', 'scent'] },
+      { name: '黑叶',   days: ['scent', 'scent', 'scent', 'scent', 'scent', 'taste'] },
+      { name: '挂绿',   days: ['color', 'color', 'color', 'color', 'scent', 'scent'] },
+      { name: '三月红', days: ['scent', 'scent', 'scent', 'scent', 'taste', 'taste'] }
+    ];
+
+    function renderFlavorMatrix() {
+      if (!matrixSvg) return;
+      matrixSvg.innerHTML = '';
+
+      const stepX = STAGE3_1_CONFIG.stepX;
+      const startX = STAGE3_1_CONFIG.startX;
+      const bubbleR = STAGE3_1_CONFIG.bubbleR;
+      const startY = 36;
+      const rowStep = 2 * bubbleR;
+
+      const axisY = startY + 8 * rowStep;
+      const axisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      axisLine.setAttribute('x1', `${startX}`); axisLine.setAttribute('y1', `${axisY}`);
+      axisLine.setAttribute('x2', `${startX + 7 * stepX + 24}`); axisLine.setAttribute('y2', `${axisY}`);
+      axisLine.setAttribute('stroke', '#cfcbc2'); axisLine.setAttribute('stroke-width', '1.2');
+      matrixSvg.appendChild(axisLine);
+
+      const arrowEnd = startX + 7 * stepX + 24;
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      arrow.setAttribute('points', `${arrowEnd - 7},${axisY - 4.5} ${arrowEnd},${axisY} ${arrowEnd - 7},${axisY + 4.5}`);
+      arrow.setAttribute('fill', 'none'); arrow.setAttribute('stroke', '#cfcbc2'); arrow.setAttribute('stroke-width', '1.2');
+      matrixSvg.appendChild(arrow);
+
+      const tick0 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tick0.setAttribute('x', `${startX}`); tick0.setAttribute('y', `${axisY + 20}`);
+      tick0.setAttribute('font-family', 'Times New Roman'); tick0.setAttribute('font-size', '14.5');
+      tick0.setAttribute('fill', '#9e9890'); tick0.setAttribute('text-anchor', 'middle');
+      tick0.textContent = '0'; matrixSvg.appendChild(tick0);
+
+      const tick6 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tick6.setAttribute('x', `${startX + 6 * stepX}`); tick6.setAttribute('y', `${axisY + 20}`);
+      tick6.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif'); tick6.setAttribute('font-size', '13');
+      tick6.setAttribute('fill', '#9e9890'); tick6.setAttribute('text-anchor', 'middle');
+      tick6.textContent = '6日'; matrixSvg.appendChild(tick6);
+
+      VARIETY_DATA.forEach((v, r) => {
+        const rowY = startY + r * rowStep;
+        const rowG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        rowG.setAttribute('class', 'flavor-row-group');
+
+        const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        nameText.setAttribute('class', 'variety-name-text');
+        nameText.setAttribute('x', `${startX - 22}`); nameText.setAttribute('y', `${rowY + 4}`);
+        nameText.setAttribute('text-anchor', 'end'); nameText.textContent = v.name;
+        rowG.appendChild(nameText);
+
+        const dot0 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot0.setAttribute('cx', `${startX}`); dot0.setAttribute('cy', `${rowY}`);
+        dot0.setAttribute('r', '3.8'); dot0.setAttribute('fill', '#b5beb3');
+        rowG.appendChild(dot0);
+
+        v.days.forEach((grade, c) => {
+          const cx = startX + (c + 1) * stepX; const cy = rowY;
+          const cellG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          cellG.setAttribute('class', 'flavor-bubble-cell'); cellG.setAttribute('data-grade', grade); cellG.setAttribute('data-col', c); cellG.setAttribute('style', `opacity: 0;`);
+
+          const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          outer.setAttribute('class', 'bubble-outer'); outer.setAttribute('cx', `${cx}`); outer.setAttribute('cy', `${cy}`);
+          outer.setAttribute('r', `${bubbleR}`); outer.setAttribute('fill', FLAVOR_COLORS[grade].fill);
+          cellG.appendChild(outer);
+
+          const inner = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          inner.setAttribute('class', 'bubble-inner'); inner.setAttribute('cx', `${cx}`); inner.setAttribute('cy', `${cy}`);
+          inner.setAttribute('r', '3.8'); inner.setAttribute('fill', '#b5beb3');
+          cellG.appendChild(inner);
+
+          rowG.appendChild(cellG);
+        });
+
+        const dot7 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot7.setAttribute('cx', `${startX + 7 * stepX}`); dot7.setAttribute('cy', `${rowY}`);
+        dot7.setAttribute('r', '3.8'); dot7.setAttribute('fill', '#b5beb3');
+        rowG.appendChild(dot7);
+
+        matrixSvg.appendChild(rowG);
+      });
+
+      renderSvgLegend(matrixSvg, startX, axisY + 54);
+      initFlavorPhysics();
+    }
+
+    function renderSvgLegend(svg, startX, legendY) {
+      const legendG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      legendG.setAttribute('id', 'svgLegendGroup');
+
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      title.setAttribute('x', `${startX - 22}`); title.setAttribute('y', `${legendY + 16}`);
+      title.setAttribute('text-anchor', 'end'); title.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+      title.setAttribute('font-size', '11.5'); title.setAttribute('fill', '#8c857b'); title.textContent = '保留率';
+      legendG.appendChild(title);
+
+      const barH = 24;
+      const segments = [
+        { grade: 'fresh', w: 38, fill: '#fde8d7', text: '新鲜', textColor: '#7e756c' },
+        { grade: 'color', w: 54, fill: '#de8261', text: '色变', textColor: '#ffffff' },
+        { grade: 'scent', w: 52, fill: '#9e4e3e', text: '香变', textColor: '#ffffff' },
+        { grade: 'taste', w: 136, fill: '#9eb098', text: '味变', textColor: '#ffffff' }
+      ];
+
+      let curX = startX;
+      const dividers = [curX];
+
+      segments.forEach(seg => {
+        const segG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        segG.setAttribute('class', 'legend-segment-svg'); segG.setAttribute('data-grade', seg.grade); segG.style.cursor = 'pointer';
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', `${curX}`); rect.setAttribute('y', `${legendY}`);
+        rect.setAttribute('width', `${seg.w}`); rect.setAttribute('height', `${barH}`); rect.setAttribute('fill', seg.fill);
+        segG.appendChild(rect);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', `${curX + seg.w / 2}`); txt.setAttribute('y', `${legendY + 16}`);
+        txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        txt.setAttribute('font-size', '10.5'); txt.setAttribute('fill', seg.textColor); txt.textContent = seg.text;
+        segG.appendChild(txt);
+
+        segG.addEventListener('mouseenter', () => filterMatrixByGrade(seg.grade));
+        segG.addEventListener('mouseleave', () => resetMatrixFilter());
+
+        legendG.appendChild(segG);
+        curX += seg.w;
+        dividers.push(curX);
+      });
+
+      const labels = ['100%', '95%', '85%', '75%', '0%'];
+      dividers.forEach((dx, i) => {
+        const isEnd = (i === 0 || i === dividers.length - 1);
+        const tickLength = isEnd ? 34 : 12; const textOffset = isEnd ? 48 : 26;
+
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', `${dx}`); tick.setAttribute('y1', `${legendY + barH}`);
+        tick.setAttribute('x2', `${dx}`); tick.setAttribute('y2', `${legendY + barH + tickLength}`);
+        tick.setAttribute('stroke', '#cfcbc2'); tick.setAttribute('stroke-width', '1');
+        legendG.appendChild(tick);
+
+        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', `${dx}`); num.setAttribute('y', `${legendY + barH + textOffset}`);
+        num.setAttribute('text-anchor', i === 0 ? 'start' : (i === dividers.length - 1 ? 'end' : 'middle'));
+        num.setAttribute('font-family', 'Times New Roman'); num.setAttribute('font-size', '13'); num.setAttribute('fill', '#9e9890');
+        num.textContent = labels[i]; legendG.appendChild(num);
+      });
+
+      svg.appendChild(legendG);
+    }
+
+    function triggerMatrixWaveAnimation() {
+      const cells = document.querySelectorAll('.flavor-bubble-cell');
+      cells.forEach(cell => {
+        const col = parseInt(cell.getAttribute('data-col'), 10);
+        const delay = col * 220 + 60;
+        cell.style.transition = 'none'; cell.style.opacity = '0';
+        setTimeout(() => {
+          cell.style.transition = 'opacity 0.1s ease'; cell.style.opacity = '1';
+        }, delay);
+      });
+    }
+
+    if (replaySeqBtn) replaySeqBtn.addEventListener('click', () => triggerMatrixWaveAnimation());
+
+    function filterMatrixByGrade(targetGrade) {
+      document.querySelectorAll('.flavor-bubble-cell').forEach(c => {
+        if (c.getAttribute('data-grade') === targetGrade) c.classList.remove('is-dimmed');
+        else c.classList.add('is-dimmed');
+      });
+    }
+    function resetMatrixFilter() { document.querySelectorAll('.flavor-bubble-cell').forEach(c => c.classList.remove('is-dimmed')); }
+
+    renderFlavorMatrix();
+
+    /* =========================================================
+       8. Stage 3.2 常温 VS 冷藏 + 列内竖直弹性
+       ========================================================= */
+    const stage32UnifiedSvg = document.getElementById('stage32UnifiedSvg');
+    const stage32Bottom = document.getElementById('stage32BottomArea');
+
+    const STAGE3_2_VARIETIES = ['妃子笑', '桂味', '糯米糍', '白糖罂', '仙进奉', '黑叶', '挂绿', '三月红'];
+    const STORAGE_CONDITIONS = ['常温 6日', '冷藏 6日', '冷藏 28日', '冷藏 35日'];
+
+    const STAGE3_2_DATA = [
+      ['taste', 'fresh', 'color', 'scent'], ['taste', 'fresh', 'scent', 'scent'],
+      ['taste', 'color', 'scent', 'taste'], ['taste', 'fresh', 'scent', 'taste'],
+      ['taste', 'fresh', 'scent', 'scent'], ['taste', 'color', 'scent', 'taste'],
+      ['taste', 'fresh', 'scent', 'scent'], ['taste', 'color', 'scent', 'taste']
+    ];
+
+    function renderStage32Unified() {
+      if (!stage32UnifiedSvg) return;
+      stage32UnifiedSvg.innerHTML = '';
+
+      if (stage32Bottom) {
+        stage32UnifiedSvg.style.maxWidth = `${STAGE3_2_CONFIG.maxWidth}px`;
+        stage32Bottom.style.paddingRight = `${STAGE3_2_CONFIG.marginRight}px`;
+      }
+
+      const blockSize = STAGE3_2_CONFIG.blockSize;
+      const colGap = STAGE3_2_CONFIG.colGap;
+      const colStep = blockSize + colGap;
+      const startY = 88;
+      const totalBlockH = 4 * blockSize;
+
+      const barX = 50; const barY = startY; const barW = 12;
+
+      const vsegs = [
+        { grade: 'fresh', h: 28, fill: '#fde8d7', text: '新鲜' },
+        { grade: 'color', h: 35, fill: '#de8261', text: '色变' },
+        { grade: 'scent', h: 38, fill: '#9e4e3e', text: '香变' },
+        { grade: 'taste', h: 111, fill: '#9eb098', text: '味变' }
+      ];
+
+      ['保', '留', '率'].forEach((ch, idx) => {
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', `${barX + barW / 2}`); t.setAttribute('y', `${barY - 36 + idx * 13}`);
+        t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        t.setAttribute('font-size', '11'); t.setAttribute('fill', '#8c857b'); t.textContent = ch;
+        stage32UnifiedSvg.appendChild(t);
+      });
+
+      let curY = barY;
+      const ticksY = [curY];
+
+      vsegs.forEach(seg => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'legend-seg-32');
+
+        const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        r.setAttribute('x', `${barX}`); r.setAttribute('y', `${curY}`);
+        r.setAttribute('width', `${barW}`); r.setAttribute('height', `${seg.h}`); r.setAttribute('fill', seg.fill);
+        g.appendChild(r);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', `${barX - 8}`); txt.setAttribute('y', `${curY + seg.h / 2 + 3.5}`);
+        txt.setAttribute('text-anchor', 'end'); txt.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        txt.setAttribute('font-size', '10'); txt.setAttribute('fill', '#9e9890'); txt.textContent = seg.text;
+        g.appendChild(txt);
+
+        g.addEventListener('mouseenter', () => filterCompareByGrade(seg.grade));
+        g.addEventListener('mouseleave', () => resetCompareFilter());
+
+        stage32UnifiedSvg.appendChild(g);
+        curY += seg.h;
+        ticksY.push(curY);
+      });
+
+      const vlabels = ['100%', '95%', '85%', '75%', '0%'];
+      ticksY.forEach((ty, idx) => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', `${barX - 32}`); line.setAttribute('y1', `${ty}`);
+        line.setAttribute('x2', `${barX}`); line.setAttribute('y2', `${ty}`);
+        line.setAttribute('stroke', '#cfcbc2'); line.setAttribute('stroke-width', '1');
+        stage32UnifiedSvg.appendChild(line);
+
+        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', `${barX - 36}`); num.setAttribute('y', `${ty + 3.5}`);
+        num.setAttribute('text-anchor', 'end'); num.setAttribute('font-family', 'Times New Roman');
+        num.setAttribute('font-size', '11.5'); num.setAttribute('fill', '#9e9890'); num.textContent = vlabels[idx];
+        stage32UnifiedSvg.appendChild(num);
+      });
+
+      const matrixStartX = 145;
+      STORAGE_CONDITIONS.forEach((cond, idx) => {
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', `${matrixStartX - 16}`); t.setAttribute('y', `${startY + idx * blockSize + blockSize / 2 + 4.5}`);
+        t.setAttribute('text-anchor', 'end'); t.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        t.setAttribute('font-size', '11.5'); t.setAttribute('fill', '#8c857b'); t.textContent = cond;
+        stage32UnifiedSvg.appendChild(t);
+      });
+
+      STAGE3_2_VARIETIES.forEach((vname, col) => {
+        const colX = matrixStartX + col * colStep;
+        const colG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+        const labelX = colX + blockSize / 2 + 3.5;
+        const labelY = startY - 26;
+        const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        nameText.setAttribute('x', `${labelX}`); nameText.setAttribute('y', `${labelY}`);
+        nameText.setAttribute('transform', `rotate(-90, ${labelX}, ${labelY})`);
+        nameText.setAttribute('text-anchor', 'start'); nameText.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        nameText.setAttribute('font-size', '11.5'); nameText.setAttribute('letter-spacing', '0.08em');
+        nameText.setAttribute('fill', '#8c857b'); nameText.textContent = vname;
+        colG.appendChild(nameText);
+
+        const topDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        topDot.setAttribute('cx', `${colX + blockSize / 2}`); topDot.setAttribute('cy', `${startY - 14}`);
+        topDot.setAttribute('r', '3.8'); topDot.setAttribute('fill', '#b2beb0');
+        colG.appendChild(topDot);
+
+        const grades = STAGE3_2_DATA[col];
+        grades.forEach((gr, row) => {
+          const by = startY + row * blockSize;
+          const blockG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          blockG.setAttribute('class', `compare-block-group row-idx-${row}`);
+
+          const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          r.setAttribute('class', 'compare-block-rect'); r.setAttribute('data-grade', gr);
+          r.setAttribute('x', `${colX}`); r.setAttribute('y', `${by}`);
+          r.setAttribute('width', `${blockSize}`); r.setAttribute('height', `${blockSize}`);
+          r.setAttribute('rx', '1.5'); r.setAttribute('fill', FLAVOR_COLORS[gr].fill);
+          blockG.appendChild(r);
+
+          const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          dot.setAttribute('cx', `${colX + blockSize / 2}`); dot.setAttribute('cy', `${by + blockSize / 2}`);
+          dot.setAttribute('r', '3.8'); dot.setAttribute('fill', '#b2beb0'); dot.style.pointerEvents = 'none';
+          blockG.appendChild(dot);
+
+          colG.appendChild(blockG);
+        });
+
+        const botDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        botDot.setAttribute('cx', `${colX + blockSize / 2}`); botDot.setAttribute('cy', `${startY + totalBlockH + 16}`);
+        botDot.setAttribute('r', '3.8'); botDot.setAttribute('fill', '#b2beb0');
+        colG.appendChild(botDot);
+
+        stage32UnifiedSvg.appendChild(colG);
+      });
+
+      initStage32Physics();
+    }
+
+    const STAGE32_PHYSICS_CONFIG = { influenceRadius: 90, repelStrength: 18, springK: 0.12, damping: 0.75, maxOffset: 22 };
+    const STAGE32_LAYOUT = { matrixStartX: 145, colStep: 63, startY: 88, blockSize: 53, colCount: 8, rowCount: 4 };
+
+    const stage32Cols = [];
+    let stage32Mouse = null;
+    let stage32ActiveCol = -1;
+    let stage32PhysicsRafId = null;
+
+    function initStage32Physics() {
+      stage32Cols.length = 0;
+      for (let c = 0; c < STAGE32_LAYOUT.colCount; c++) stage32Cols.push([]);
+
+      document.querySelectorAll('#stage32UnifiedSvg .compare-block-group').forEach(g => {
+        const rect = g.querySelector('rect'); const dot = g.querySelector('circle');
+        if (!rect || !dot) return;
+        const rx = parseFloat(rect.getAttribute('x')); const ry = parseFloat(rect.getAttribute('y'));
+        const col = Math.round((rx - STAGE32_LAYOUT.matrixStartX) / STAGE32_LAYOUT.colStep);
+        if (col < 0 || col >= STAGE32_LAYOUT.colCount) return;
+        stage32Cols[col].push({ rect, dot, baseRectY: ry, baseDotCy: ry + STAGE32_LAYOUT.blockSize / 2, offY: 0, vy: 0 });
+      });
+
+      if (!stage32UnifiedSvg) return;
+
+      stage32UnifiedSvg.addEventListener('mousemove', (e) => {
+        const pt = stage32UnifiedSvg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+        const sp = pt.matrixTransform(stage32UnifiedSvg.getScreenCTM().inverse());
+        stage32Mouse = { x: sp.x, y: sp.y };
+
+        const localX = sp.x - STAGE32_LAYOUT.matrixStartX;
+        const colIdx = Math.floor(localX / STAGE32_LAYOUT.colStep);
+        const inColBlock = (localX - colIdx * STAGE32_LAYOUT.colStep) < STAGE32_LAYOUT.blockSize;
+        const yMin = STAGE32_LAYOUT.startY - 10;
+        const yMax = STAGE32_LAYOUT.startY + STAGE32_LAYOUT.rowCount * STAGE32_LAYOUT.blockSize + 10;
+        const inRowRange = sp.y >= yMin && sp.y <= yMax;
+
+        stage32ActiveCol = (colIdx >= 0 && colIdx < STAGE32_LAYOUT.colCount && inColBlock && inRowRange) ? colIdx : -1;
+        if (stage32PhysicsRafId === null) stage32PhysicsRafId = requestAnimationFrame(updateStage32Physics);
+      });
+
+      stage32UnifiedSvg.addEventListener('mouseleave', () => {
+        stage32Mouse = null; stage32ActiveCol = -1;
+        if (stage32PhysicsRafId === null) stage32PhysicsRafId = requestAnimationFrame(updateStage32Physics);
+      });
+    }
+
+    function updateStage32Physics() {
+      const { influenceRadius: R, repelStrength, springK, damping, maxOffset } = STAGE32_PHYSICS_CONFIG;
+      let hasMotion = false;
+
+      for (let c = 0; c < stage32Cols.length; c++) {
+        const isActiveCol = (c === stage32ActiveCol);
+        for (const s of stage32Cols[c]) {
+          let fy = 0; fy -= s.offY * springK;
+          if (isActiveCol && stage32Mouse) {
+            const dy = (s.baseRectY + s.offY) - stage32Mouse.y;
+            const dist = Math.abs(dy);
+            if (dist < R && dist > 0.001) {
+              const f = (1 - dist / R) * repelStrength;
+              fy += Math.sign(dy) * f;
+            }
+          }
+          s.vy = (s.vy + fy) * damping; s.offY += s.vy;
+
+          if (Math.abs(s.offY) > maxOffset) {
+            s.offY = Math.sign(s.offY) * maxOffset; s.vy *= 0.5;
+          }
+          s.rect.setAttribute('y', (s.baseRectY + s.offY).toFixed(2));
+          s.dot.setAttribute('cy', (s.baseDotCy + s.offY).toFixed(2));
+          if (Math.abs(s.offY) > 0.05 || Math.abs(s.vy) > 0.05) hasMotion = true;
+        }
+      }
+
+      if (hasMotion || stage32ActiveCol >= 0) {
+        stage32PhysicsRafId = requestAnimationFrame(updateStage32Physics);
+      } else {
+        for (let c = 0; c < stage32Cols.length; c++) {
+          for (const s of stage32Cols[c]) {
+            s.offY = 0; s.vy = 0;
+            s.rect.setAttribute('y', s.baseRectY); s.dot.setAttribute('cy', s.baseDotCy);
+          }
+        }
+        stage32PhysicsRafId = null;
+      }
+    }
+
+    function triggerStage32RowStagger() {
+      stage32Timers.forEach(t => clearTimeout(t));
+      stage32Timers = [];
+      for (let r = 0; r < 4; r++) {
+        const id = setTimeout(() => {
+          document.querySelectorAll(`.compare-block-group.row-idx-${r}`).forEach(g => g.classList.add('is-row-visible'));
+        }, r * 280 + 100);
+        stage32Timers.push(id);
+      }
+    }
+
+    function filterCompareByGrade(targetGrade) {
+      document.querySelectorAll('.compare-block-rect').forEach(b => {
+        if (b.getAttribute('data-grade') === targetGrade) b.classList.remove('is-dimmed');
+        else b.classList.add('is-dimmed');
+      });
+    }
+    function resetCompareFilter() { document.querySelectorAll('.compare-block-rect').forEach(b => b.classList.remove('is-dimmed')); }
+
+    renderStage32Unified();
+
+    /* =========================================================
+       9. Stage 3.3 甜度范围（3D 矩阵柱状图）
+       ========================================================= */
+    const SWEET_STAGE33_DATA = [
+      { name: '妃子笑', min: 16.5, max: 19.0, flavor: '清甜带微香' },
+      { name: '桂味',   min: 17.0, max: 21.0, flavor: '桂花清香' },
+      { name: '糯米糍', min: 18.0, max: 21.0, flavor: '浓甜如蜜' },
+      { name: '白糖罂', min: 18.0, max: 20.0, flavor: '脆甜纯正' },
+      { name: '三月红', min: 15.0, max: 20.0, flavor: '酸甜微甘' },
+      { name: '挂绿',   min: 17.0, max: 21.0, flavor: '清幽爽脆' },
+      { name: '黑叶',   min: 16.0, max: 20.0, flavor: '浓郁多汁' },
+      { name: '仙进奉', min: 19.0, max: 21.0, flavor: '蜜香馥郁' }
+    ];
+
+    const TSS_TICKS = [];
+    for (let t = 15.0; t <= 21.001; t += 0.5) TSS_TICKS.push(parseFloat(t.toFixed(1)));
+
+    const NORMAL_SIGMA = 0.30;
+    const NORMAL_FLOOR = 0.30;
+    const COL_STEP = 0.035; const ROW_STEP = 0.010;
+    const DEFAULT_RESET_DELAY = 140;
+
+    const chartStageWrap = document.getElementById('chartStageWrap');
+    const scentFlagCard = document.getElementById('scentFlagCard');
+    const flagFlavor = document.getElementById('flagFlavor');
+    const flagTss = document.getElementById('flagTss');
+    const scaleHeaderRow = document.getElementById('scaleHeaderRow');
+    const matrixGridTable = document.getElementById('matrixGridTable');
+    const matrixScene = document.querySelector('.matrix-scene');
+    const btn2D = document.getElementById('btn2D');
+    const btn3D = document.getElementById('btn3D');
+
+    let activeRowIndex = 1;
+    let is3DMode = false;
+    let lastHoveredElement = null;
+
+    const DEFAULT_VIEW = { rotX: 48, rotZ: -20, scale: 0.96 };
+    let viewRotX = DEFAULT_VIEW.rotX;
+    let viewRotZ = DEFAULT_VIEW.rotZ;
+    let viewScale = DEFAULT_VIEW.scale;
+
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    function applySceneTransform() {
+      if (is3DMode) matrixScene.style.transform = `rotateX(${viewRotX}deg) rotateZ(${viewRotZ}deg) scale(${viewScale})`;
+      else matrixScene.style.transform = 'rotateX(0deg) rotateZ(0deg) scale(1)';
+    }
+
+    function normalHeightFactor(t) {
+      const gauss = Math.exp(-Math.pow(t - 0.5, 2) / (2 * NORMAL_SIGMA * NORMAL_SIGMA));
+      return NORMAL_FLOOR + (1 - NORMAL_FLOOR) * gauss;
+    }
+
+    function applyStaggeredDelays(direction) {
+      const rows = matrixGridTable.querySelectorAll('.matrix-row');
+      const maxCol = TSS_TICKS.length - 1; const maxRow = rows.length - 1;
+      rows.forEach((row, rIdx) => {
+        row.querySelectorAll('.cube-item').forEach((cube, cIdx) => {
+          const body = cube.querySelector('.cube-body');
+          if (!body) return;
+          const d = (direction === 'up') ? cIdx * COL_STEP + rIdx * ROW_STEP : (maxCol - cIdx) * COL_STEP + (maxRow - rIdx) * ROW_STEP;
+          body.style.transitionDelay = `${d.toFixed(3)}s`;
+        });
+      });
+    }
+
+    function initMatrixChart() {
+      scaleHeaderRow.innerHTML = '';
+      TSS_TICKS.forEach(val => {
+        const tick = document.createElement('div');
+        tick.className = 'scale-tick-label'; tick.textContent = val.toFixed(1);
+        scaleHeaderRow.appendChild(tick);
+      });
+
+      SWEET_STAGE33_DATA.forEach((item, rIdx) => {
+        const row = document.createElement('div');
+        row.className = `matrix-row ${rIdx === activeRowIndex ? 'row-active' : ''}`;
+        row.setAttribute('data-row', rIdx);
+
+        const label = document.createElement('div');
+        label.className = 'variety-label'; label.textContent = item.name;
+        row.appendChild(label);
+
+        const strip = document.createElement('div'); strip.className = 'blocks-strip';
+        const inRangeIndices = [];
+        TSS_TICKS.forEach((v, i) => { if (v >= item.min && v <= item.max) inRangeIndices.push(i); });
+        const total = inRangeIndices.length;
+
+        TSS_TICKS.forEach((tickVal, cIdx) => {
+          const inRange = (tickVal >= item.min && tickVal <= item.max);
+          const cube = document.createElement('div');
+          cube.className = `cube-item ${inRange ? 'in-range' : 'out-range'}`;
+          cube.setAttribute('data-row', rIdx); cube.setAttribute('data-col', cIdx);
+
+          if (inRange) {
+            const posInRange = inRangeIndices.indexOf(cIdx);
+            const t = total <= 1 ? 0.5 : posInRange / (total - 1);
+            cube.style.setProperty('--h-scale', normalHeightFactor(t).toFixed(4));
+          }
+
+          cube.innerHTML = `<div class="cube-body"><div class="cube-face cube-top"></div><div class="cube-face cube-front"></div><div class="cube-face cube-back"></div><div class="cube-face cube-left"></div><div class="cube-face cube-right"></div></div>`;
+
+          cube.addEventListener('mouseenter', () => {
+            if (dragging) return;
+            cancelDefaultReset();
+            activeRowIndex = rIdx; lastHoveredElement = cube;
+            updateRowActiveState();
+            positionFlagBelow(cube, item);
+          });
+
+          strip.appendChild(cube);
+        });
+
+        row.appendChild(strip); matrixGridTable.appendChild(row);
+      });
+
+      setTimeout(() => { resetToDefaultHover(); }, 50);
+    }
+
+    function updateRowActiveState() {
+      matrixGridTable.querySelectorAll('.matrix-row').forEach((r, idx) => {
+        r.classList.toggle('row-active', idx === activeRowIndex);
+      });
+    }
+
+    let defaultResetTimer = null;
+    function cancelDefaultReset() { clearTimeout(defaultResetTimer); }
+    function scheduleDefaultReset() {
+      clearTimeout(defaultResetTimer);
+      defaultResetTimer = setTimeout(() => { resetToDefaultHover(); }, DEFAULT_RESET_DELAY);
+    }
+    function resetToDefaultHover() {
+      activeRowIndex = 1; updateRowActiveState();
+      const rowCubes = matrixGridTable.querySelectorAll('.matrix-row[data-row="1"] .cube-item.in-range');
+      if (rowCubes.length > 0) {
+        const midCube = rowCubes[Math.floor(rowCubes.length / 2)];
+        lastHoveredElement = midCube;
+        positionFlagBelow(midCube, SWEET_STAGE33_DATA[1]);
+      }
+    }
+
+    let flagItemKey = '';
+    function setFlagContent(item) {
+      if (!item || flagItemKey === item.name) return;
+      flagItemKey = item.name;
+      flagFlavor.textContent = item.flavor;
+      flagTss.textContent = `${item.min.toFixed(1)} – ${item.max.toFixed(1)} °Bx`;
+    }
+
+    function positionFlagBelow(element, item) {
+      if (!element || !scentFlagCard || !chartStageWrap) return;
+      setFlagContent(item);
+      const elRect = element.getBoundingClientRect();
+      const wrapRect = chartStageWrap.getBoundingClientRect();
+      scentFlagCard.style.left = `${(elRect.left + elRect.width / 2) - wrapRect.left}px`;
+      scentFlagCard.style.top = `${(elRect.bottom - wrapRect.top) + (is3DMode ? 10 : 8)}px`;
+    }
+
+    function updateFlagPosition() {
+      if (!lastHoveredElement) return;
+      const item = SWEET_STAGE33_DATA[activeRowIndex];
+      if (item) positionFlagBelow(lastHoveredElement, item);
+    }
+
+    function trackFlagDuringAnimation(duration = 850) {
+      const start = performance.now();
+      function tick(now) {
+        updateFlagPosition();
+        if (now - start < duration) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function setDimensionMode(to3D) {
+      if (is3DMode === to3D) return;
+      is3DMode = to3D;
+      dragging = false; dragMoved = false;
+      chartStageWrap.classList.remove('dragging', 'no-anim');
+      clearTimeout(noAnimTimer);
+      viewRotX = DEFAULT_VIEW.rotX; viewRotZ = DEFAULT_VIEW.rotZ; viewScale = DEFAULT_VIEW.scale;
+      applyStaggeredDelays(to3D ? 'up' : 'down');
+
+      if (to3D) {
+        chartStageWrap.classList.add('mode-3d');
+        btn3D.classList.add('active'); btn2D.classList.remove('active');
+      } else {
+        chartStageWrap.classList.remove('mode-3d');
+        btn2D.classList.add('active'); btn3D.classList.remove('active');
+      }
+
+      applySceneTransform();
+      trackFlagDuringAnimation(1500);
+    }
+
+    let dragging = false, dragMoved = false;
+    let dragStartX = 0, dragStartY = 0, dragBaseRotX = 0, dragBaseRotZ = 0;
+
+    chartStageWrap.addEventListener('pointerdown', (e) => {
+      if (!is3DMode || e.button !== 0) return;
+      dragging = true; dragMoved = false;
+      dragStartX = e.clientX; dragStartY = e.clientY;
+      dragBaseRotX = viewRotX; dragBaseRotZ = viewRotZ;
+      try { chartStageWrap.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+
+    chartStageWrap.addEventListener('pointermove', (e) => {
+      if (dragging) return;
+      if (e.target.closest('.cube-item')) cancelDefaultReset();
+      else scheduleDefaultReset();
+    });
+
+    chartStageWrap.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - dragStartX; const dy = e.clientY - dragStartY;
+      if (!dragMoved) {
+        if (Math.hypot(dx, dy) < 4) return;
+        dragMoved = true; dragStartX = e.clientX; dragStartY = e.clientY;
+        dragBaseRotX = viewRotX; dragBaseRotZ = viewRotZ;
+        chartStageWrap.classList.add('dragging');
+        return;
+      }
+      viewRotZ = dragBaseRotZ + (e.clientX - dragStartX) * 0.3;
+      viewRotX = clamp(dragBaseRotX - (e.clientY - dragStartY) * 0.3, 8, 82);
+      applySceneTransform(); updateFlagPosition();
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false; chartStageWrap.classList.remove('dragging');
+      try { chartStageWrap.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (dragMoved) { applySceneTransform(); updateFlagPosition(); }
+      if (!isPointerInside(e)) resetToDefaultHover();
+    }
+
+    function isPointerInside(e) {
+      const rect = chartStageWrap.getBoundingClientRect();
+      return e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+    }
+
+    chartStageWrap.addEventListener('pointerup', endDrag);
+    chartStageWrap.addEventListener('pointercancel', endDrag);
+    chartStageWrap.addEventListener('pointerleave', () => {
+      if (dragging) return;
+      cancelDefaultReset(); resetToDefaultHover();
+    });
+
+    let noAnimTimer = null;
+    function pulseNoAnim() {
+      chartStageWrap.classList.add('no-anim');
+      clearTimeout(noAnimTimer);
+      noAnimTimer = setTimeout(() => { chartStageWrap.classList.remove('no-anim'); }, 160);
+    }
+
+    chartStageWrap.addEventListener('wheel', (e) => {
+      if (!is3DMode) return;
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      viewScale = clamp(viewScale * factor, 0.45, 2.4);
+      pulseNoAnim(); applySceneTransform(); updateFlagPosition();
+    }, { passive: false });
+
+    chartStageWrap.addEventListener('dblclick', () => {
+      if (!is3DMode) return;
+      viewRotX = DEFAULT_VIEW.rotX; viewRotZ = DEFAULT_VIEW.rotZ; viewScale = DEFAULT_VIEW.scale;
+      chartStageWrap.classList.remove('no-anim'); applySceneTransform(); trackFlagDuringAnimation();
+    });
+
+    window.addEventListener('resize', updateFlagPosition);
+    initMatrixChart();
+
+    /* =========================================================
+       10. Stage 3.4 果实大小
+       ========================================================= */
+    const stage34Svg = document.getElementById('stage34Svg');
+    const stage34Canvas = document.getElementById('stage34Canvas');
+
+    const STAGE3_4_DATA = [
+      { name: '妃子笑', pulp: 19.92, peel: 1.18, hasData: true },
+      { name: '桂味',   pulp: 13.30, peel: 0.70, hasData: true },
+      { name: '糯米糍', pulp: 16.35, peel: 0.65, hasData: true },
+      { name: '白糖罂', pulp: 14.25, peel: 0.75, hasData: true },
+      { name: '三月红', pulp: 22.65, peel: 1.35, hasData: true },
+      { name: '挂绿',   hasData: false },
+      { name: '黑叶',   pulp: 19.10, peel: 0.90, hasData: true },
+      { name: '仙进奉', hasData: false }
+    ];
+
+    function valToH(val) { return (val / 25) * 300; }
+
+    function renderStage34Chart() {
+      if (!stage34Svg) return;
+      stage34Svg.innerHTML = '';
+
+      const startX = 140, colStep = 90, colWidth = 66, baseY = 340;
+
+      [0, 5, 10, 15, 20].forEach(tVal => {
+        const yPos = baseY - valToH(tVal);
+        const hline = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        hline.setAttribute('x1', `${startX - 30}`); hline.setAttribute('y1', `${yPos}`);
+        hline.setAttribute('x2', `${startX + 7 * colStep + colWidth + 20}`); hline.setAttribute('y2', `${yPos}`);
+        hline.setAttribute('stroke', '#ede8df'); hline.setAttribute('stroke-width', '1');
+        stage34Svg.appendChild(hline);
+
+        const tickLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tickLine.setAttribute('x1', `${startX - 38}`); tickLine.setAttribute('y1', `${yPos}`);
+        tickLine.setAttribute('x2', `${startX - 30}`); tickLine.setAttribute('y2', `${yPos}`);
+        tickLine.setAttribute('stroke', '#9e9890'); tickLine.setAttribute('stroke-width', '1.2');
+        stage34Svg.appendChild(tickLine);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', `${startX - 44}`); txt.setAttribute('y', `${yPos + 4.5}`);
+        txt.setAttribute('text-anchor', 'end'); txt.setAttribute('font-family', 'Times New Roman');
+        txt.setAttribute('font-size', '13.5'); txt.setAttribute('fill', '#9e9890'); txt.textContent = `${tVal}`;
+        stage34Svg.appendChild(txt);
+      });
+
+      const yAxisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      yAxisLine.setAttribute('x1', `${startX - 30}`); yAxisLine.setAttribute('y1', `${baseY - valToH(20) - 10}`);
+      yAxisLine.setAttribute('x2', `${startX - 30}`); yAxisLine.setAttribute('y2', `${baseY}`);
+      yAxisLine.setAttribute('stroke', '#9e9890'); yAxisLine.setAttribute('stroke-width', '2');
+      stage34Svg.appendChild(yAxisLine);
+
+      STAGE3_4_DATA.forEach((d, idx) => {
+        const colX = startX + idx * colStep;
+        const colG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        colG.setAttribute('class', 'bar-column-group');
+
+        const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        nameText.setAttribute('x', `${colX + colWidth / 2}`); nameText.setAttribute('y', `${baseY + 24}`);
+        nameText.setAttribute('text-anchor', 'middle'); nameText.setAttribute('font-family', 'ALIBABAPUHUITI-3-45-LIGHT, sans-serif');
+        nameText.setAttribute('font-size', '12.5'); nameText.setAttribute('font-weight', d.name === '桂味' ? '500' : '300');
+        nameText.setAttribute('fill', d.name === '桂味' ? '#1a1a1a' : '#55514c'); nameText.textContent = d.name;
+        colG.appendChild(nameText);
+
+        if (d.hasData) {
+          const pulpH = valToH(d.pulp); const peelH = valToH(d.peel); const totalH = pulpH + peelH;
+          const stackG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          stackG.setAttribute('class', 'bar-stack-animated'); stackG.setAttribute('data-idx', idx);
+
+          const pulpRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          pulpRect.setAttribute('class', 'bar-pulp'); pulpRect.setAttribute('x', `${colX}`);
+          pulpRect.setAttribute('y', `${baseY - pulpH}`); pulpRect.setAttribute('width', `${colWidth}`);
+          pulpRect.setAttribute('height', `${pulpH}`); pulpRect.setAttribute('fill', d.name === '桂味' ? '#ffc4ba' : '#faeaeb');
+          stackG.appendChild(pulpRect);
+
+          const peelRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          peelRect.setAttribute('class', 'bar-peel'); peelRect.setAttribute('x', `${colX}`);
+          peelRect.setAttribute('y', `${baseY - totalH}`); peelRect.setAttribute('width', `${colWidth}`);
+          peelRect.setAttribute('height', `${peelH}`); peelRect.setAttribute('fill', d.name === '桂味' ? '#f57c5a' : '#fbd6d2');
+          stackG.appendChild(peelRect);
+
+          const peelTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          peelTxt.setAttribute('class', 'bar-data-text'); peelTxt.setAttribute('x', `${colX + colWidth / 2}`);
+          peelTxt.setAttribute('y', `${baseY - totalH + 11}`); peelTxt.setAttribute('text-anchor', 'middle');
+          peelTxt.setAttribute('font-family', 'Times New Roman'); peelTxt.setAttribute('font-size', '12.5');
+          peelTxt.setAttribute('font-weight', 'bold'); peelTxt.setAttribute('fill', '#1a1a1a');
+          peelTxt.textContent = `${d.peel.toFixed(2)}`; stackG.appendChild(peelTxt);
+
+          const pulpTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          pulpTxt.setAttribute('class', 'bar-data-text'); pulpTxt.setAttribute('x', `${colX + colWidth / 2}`);
+          pulpTxt.setAttribute('y', `${baseY - pulpH + 18}`); pulpTxt.setAttribute('text-anchor', 'middle');
+          pulpTxt.setAttribute('font-family', 'Times New Roman'); pulpTxt.setAttribute('font-size', '14.5');
+          pulpTxt.setAttribute('font-weight', 'bold'); pulpTxt.setAttribute('fill', '#9d4637');
+          pulpTxt.textContent = `${d.pulp.toFixed(2)}`; stackG.appendChild(pulpTxt);
+
+          colG.appendChild(stackG);
+
+          colG.addEventListener('mouseenter', () => {
+            stage34Canvas.classList.add('is-hovering'); colG.classList.add('is-bar-active');
+          });
+          colG.addEventListener('mouseleave', () => {
+            stage34Canvas.classList.remove('is-hovering'); colG.classList.remove('is-bar-active');
+          });
+        }
+        stage34Svg.appendChild(colG);
+      });
+    }
+    renderStage34Chart();
+
+    /* =========================================================
+       11. Stage 3.5 上火指数
+       ========================================================= */
+    const stage35Svg = document.getElementById('stage35Svg');
+    const stage35Canvas = document.getElementById('stage35Canvas');
+
+    const STAGE3_5_DATA = [
+      { name: '妃子笑', val: 87 }, { name: '桂味',   val: 92, isFei: true },
+      { name: '糯米糍', val: 84 }, { name: '白糖罂', val: 89 },
+      { name: '三月红', val: 68 }, { name: '挂绿',   val: 78 },
+      { name: '黑叶',   val: 63 }, { name: '仙进奉', val: 81 }
+    ];
+
+    function valToDownH(val) { return (val / 100) * 260; }
+
+    function renderStage35Chart() {
+      if (!stage35Svg) return;
+      stage35Svg.innerHTML = '';
+
+      const startX = 140, colStep = 90, colWidth = 66, topY = 10;
+
+      [0, 20, 40, 60, 80, 100].forEach(tVal => {
+        const yPos = topY + valToDownH(tVal);
+        const hline = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        hline.setAttribute('x1', `${startX - 30}`); hline.setAttribute('y1', `${yPos}`);
+        hline.setAttribute('x2', `${startX + 7 * colStep + colWidth + 20}`); hline.setAttribute('y2', `${yPos}`);
+        hline.setAttribute('stroke', '#ede8df'); hline.setAttribute('stroke-width', '1');
+        stage35Svg.appendChild(hline);
+
+        const tickLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tickLine.setAttribute('x1', `${startX - 38}`); tickLine.setAttribute('y1', `${yPos}`);
+        tickLine.setAttribute('x2', `${startX - 30}`); tickLine.setAttribute('y2', `${yPos}`);
+        tickLine.setAttribute('stroke', '#9e9890'); tickLine.setAttribute('stroke-width', '1.2');
+        stage35Svg.appendChild(tickLine);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', `${startX - 44}`); txt.setAttribute('y', `${yPos + 4.5}`);
+        txt.setAttribute('text-anchor', 'end'); txt.setAttribute('font-family', 'Times New Roman');
+        txt.setAttribute('font-size', '13.5'); txt.setAttribute('fill', '#9e9890'); txt.textContent = `${tVal}`;
+        stage35Svg.appendChild(txt);
+      });
+
+      const yAxisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      yAxisLine.setAttribute('x1', `${startX - 30}`); yAxisLine.setAttribute('y1', `${topY - 8}`);
+      yAxisLine.setAttribute('x2', `${startX - 30}`); yAxisLine.setAttribute('y2', `${topY + valToDownH(100) + 8}`);
+      yAxisLine.setAttribute('stroke', '#9e9890'); yAxisLine.setAttribute('stroke-width', '2');
+      stage35Svg.appendChild(yAxisLine);
+
+      STAGE3_5_DATA.forEach((d, idx) => {
+        const colX = startX + idx * colStep;
+        const barH = valToDownH(d.val);
+
+        const colG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        colG.setAttribute('class', 'down-bar-column-group');
+
+        const stackG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        stackG.setAttribute('class', 'down-bar-stack-animated'); stackG.setAttribute('data-idx', idx);
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('class', 'down-bar-fill'); rect.setAttribute('x', `${colX}`);
+        rect.setAttribute('y', `${topY}`); rect.setAttribute('width', `${colWidth}`);
+        rect.setAttribute('height', `${barH}`); rect.setAttribute('fill', d.isFei ? '#ffb8ad' : '#faeaeb');
+        stackG.appendChild(rect);
+
+        const valTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        valTxt.setAttribute('class', 'down-bar-data-text'); valTxt.setAttribute('x', `${colX + colWidth / 2}`);
+        valTxt.setAttribute('y', `${topY + barH - 12}`); valTxt.setAttribute('text-anchor', 'middle');
+        valTxt.setAttribute('font-family', 'Times New Roman'); valTxt.setAttribute('font-size', '16');
+        valTxt.setAttribute('font-weight', 'bold'); valTxt.setAttribute('fill', d.isFei ? '#ffffff' : '#9d4637');
+        valTxt.textContent = `${d.val}`; stackG.appendChild(valTxt);
+
+        colG.appendChild(stackG);
+
+        colG.addEventListener('mouseenter', () => {
+          stage35Canvas.classList.add('is-hovering'); colG.classList.add('is-bar-active');
+        });
+        colG.addEventListener('mouseleave', () => {
+          stage35Canvas.classList.remove('is-hovering'); colG.classList.remove('is-bar-active');
+        });
+
+        stage35Svg.appendChild(colG);
+      });
+    }
+    renderStage35Chart();
+
+    /* =========================================================
+       12. 滚轮驱动 3.4 / 3.5 生长
+       ========================================================= */
+    function updateAllScrollDrivenCharts() {
+      const winH = window.innerHeight;
+
+      if (stage34Svg) {
+        const rect34 = stage34Svg.getBoundingClientRect();
+        const enterStart = winH * 0.85; const enterFull = winH * 0.36;
+        const exitStart = winH * 0.12; const exitEnd = -rect34.height * 0.35;
+
+        let scaleProg = 0;
+        if (rect34.top > enterFull) {
+          scaleProg = (enterStart - rect34.top) / (enterStart - enterFull);
+        } else if (rect34.top >= exitStart) {
+          scaleProg = 1;
+        } else {
+          scaleProg = (rect34.top - exitEnd) / (exitStart - exitEnd);
+        }
+        scaleProg = Math.max(0, Math.min(1, scaleProg));
+
+        document.querySelectorAll('.bar-stack-animated').forEach((stack, i) => {
+          const offset = i * 0.035;
+          const p = Math.max(0, Math.min(1, (scaleProg - offset) / (1 - offset)));
+          const eased = p * p * (3 - 2 * p);
+          stack.style.transform = `scaleY(${eased})`;
+        });
+      }
+
+      if (stage35Svg) {
+        const rect35 = stage35Svg.getBoundingClientRect();
+        const enterStart = winH * 0.85; const enterEnd = winH * 0.36;
+        let rawP35 = (enterStart - rect35.top) / (enterStart - enterEnd);
+        rawP35 = Math.max(0, Math.min(1, rawP35));
+
+        document.querySelectorAll('.down-bar-stack-animated').forEach((stack, i) => {
+          const offset = i * 0.04;
+          const p = Math.max(0, Math.min(1, (rawP35 - offset) / (1 - offset)));
+          const eased = p * p * (3 - 2 * p);
+          stack.style.transform = `scaleY(${eased})`;
+        });
+      }
+    }
+
+    /* =========================================================
+       13. Stage 3.1 & 3.2 无字交互自动引导演示 (强制触发版)
+       ========================================================= */
+    (function initPhysicsAutoDemo() {
+      let demo31Played = false;
+      let demo32Played = false;
+
+      let stopDemo31 = false;
+      let stopDemo32 = false;
+
+      const stage31El = document.getElementById('stage31Canvas');
+      const stage32El = document.getElementById('stage32Canvas');
+      
+      if (stage31El) {
+        stage31El.addEventListener('mousedown', () => stopDemo31 = true);
+        stage31El.addEventListener('touchstart', () => stopDemo31 = true, {passive: true});
+      }
+      if (stage32El) {
+        stage32El.addEventListener('mousedown', () => stopDemo32 = true);
+        stage32El.addEventListener('touchstart', () => stopDemo32 = true, {passive: true});
+      }
+
+      const demoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.target.id === 'stage31Canvas' && entry.isIntersecting && !demo31Played) {
+            demo31Played = true;
+            setTimeout(() => { if(!stopDemo31) runDemo31(); }, 2000); 
+          }
+          if (entry.target.id === 'stage32Canvas' && entry.isIntersecting && !demo32Played) {
+            demo32Played = true;
+            setTimeout(() => { if(!stopDemo32) runDemo32(); }, 2000);
+          }
+        });
+      }, { threshold: 0.2, rootMargin: "0px 0px -50px 0px" });
+
+      if (stage31El) demoObserver.observe(stage31El);
+      if (stage32El) demoObserver.observe(stage32El);
+
+      function runDemo31() {
+        if (flavorPhysicsRafId) cancelAnimationFrame(flavorPhysicsRafId);
+        flavorPhysicsRafId = null;
+        const startTime = performance.now();
+        const duration = 1800; 
+        const startX = STAGE3_1_CONFIG.startX - 60; 
+        const endX = startX + 6 * STAGE3_1_CONFIG.stepX + 120;
+        const baseY = 36 + 4 * (2 * STAGE3_1_CONFIG.bubbleR); 
+
+        function animateDemo31() {
+          const elapsed = performance.now() - startTime;
+          const p = Math.min(elapsed / duration, 1);
+          
+          if (p >= 1 || stopDemo31) {
+            flavorMouse = null;
+            if (flavorPhysicsRafId === null) flavorPhysicsRafId = requestAnimationFrame(updateFlavorPhysics);
+            return;
+          }
+
+          const easeP = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+          const x = startX + (endX - startX) * easeP;
+          const y = baseY + Math.sin(p * Math.PI * 4) * 90;
+
+          flavorMouse = { x, y };
+          if (flavorPhysicsRafId === null) flavorPhysicsRafId = requestAnimationFrame(updateFlavorPhysics);
+          requestAnimationFrame(animateDemo31);
+        }
+        requestAnimationFrame(animateDemo31);
+      }
+
+      function runDemo32() {
+        if (stage32PhysicsRafId) cancelAnimationFrame(stage32PhysicsRafId);
+        stage32PhysicsRafId = null;
+        const startTime = performance.now();
+        const duration = 1800; 
+        let currentCol = 2; const endCol = 5;
+
+        function animateDemo32() {
+          const elapsed = performance.now() - startTime;
+          const p = Math.min(elapsed / duration, 1);
+          
+          if (p >= 1 || stopDemo32) {
+            stage32ActiveCol = -1; stage32Mouse = null;
+            if (stage32PhysicsRafId === null) stage32PhysicsRafId = requestAnimationFrame(updateStage32Physics);
+            return;
+          }
+
+          const easeP = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+          const targetCol = Math.floor(2 + (endCol - 2) * easeP);
+          if (targetCol !== currentCol) currentCol = targetCol;
+
+          const colX = STAGE32_LAYOUT.matrixStartX + currentCol * STAGE32_LAYOUT.colStep + STAGE32_LAYOUT.blockSize / 2;
+          const y = STAGE32_LAYOUT.startY + STAGE32_LAYOUT.rowCount * STAGE32_LAYOUT.blockSize / 2 + Math.sin(p * Math.PI * 4) * 150; 
+
+          stage32Mouse = { x: colX, y: y }; stage32ActiveCol = currentCol;
+
+          if (stage32PhysicsRafId === null) stage32PhysicsRafId = requestAnimationFrame(updateStage32Physics);
+          requestAnimationFrame(animateDemo32);
+        }
+        requestAnimationFrame(animateDemo32);
+      }
+    })();
+
+    /* =========================================================
+       14. 嵌入图谱：香气化合物应用逻辑 (IIFE 隔离)
+       ========================================================= */
+    window._aromaApp = (function() {
+      const ALL_VARIETIES_DATA = {
+        '妃子笑': {
+          color: '#9d4637', tagline: '柑橘前调 · 辛木尾韵', signature: '柠檬烯 · 柑橘木辛',
+          radar: [85, 75, 40, 70, 80, 20],
+          table: [
+            { id: 'n1', family: '前调', compound: '柠檬烯', intensity: '3.50*' },
+            { id: 'n2', family: '前调', compound: '芳樟醇', intensity: '0.74' },
+            { id: 'n4', family: '中调', compound: '橙花醇', intensity: '2.80*' },
+            { id: 'n3', family: '中调', compound: '乙酸香茅酯', intensity: '3.20*' },
+            { id: 'n5', family: '中调', compound: '大根香叶烯', intensity: '2.50*' },
+            { id: 'n6', family: '尾调', compound: 'α-姜黄烯', intensity: '1.20*' }
+          ],
+          nodes: [
+            { id: 'n1', name: '柠檬烯', en: 'Limonene', base2D: { x: 390, y: 180 }, pos3D: { x: 115, y: 35, z: 65 }, r: 27, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '鲜亮轻快柑橘香，赋予果肉入口清爽脆感。', tags: ['单萜', '前调'] },
+            { id: 'n2', name: '芳樟醇', en: 'Linalool', base2D: { x: 285, y: 210 }, pos3D: { x: 20, y: 45, z: -55 }, r: 25, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '幽雅铃兰百合花香，共有基石成分。', tags: ['萜醇', '清香'] },
+            { id: 'n3', name: '香茅酯', en: 'Citronellyl Ac.', base2D: { x: 145, y: 165 }, pos3D: { x: -105, y: 30, z: 55 }, r: 26, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '熟果甜脂香与微带玫瑰的底香。', tags: ['萜酯', '果脂'] },
+            { id: 'n4', name: '橙花醇', en: 'Nerol', base2D: { x: 185, y: 215 }, pos3D: { x: -55, y: 45, z: -45 }, r: 25, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '玫瑰花露气息，橙花甘润。', tags: ['单萜醇', '花香'] },
+            { id: 'n5', name: '香叶烯', en: 'Germacrene', base2D: { x: 160, y: 80 }, pos3D: { x: -100, y: -40, z: -50 }, r: 25, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '木质生青韵，平衡果肉高糖甜腻。', tags: ['倍半萜', '生青'] },
+            { id: 'n6', name: '姜黄烯', en: 'α-Curcumene', base2D: { x: 375, y: 75 }, pos3D: { x: 105, y: -40, z: 60 }, r: 28, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '生姜样温和辛香，留下深远尾韵。', tags: ['姜烯类', '辛香'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n4' }, { source: 'n2', target: 'n4' }, { source: 'n3', target: 'n4' },
+            { source: 'n3', target: 'n5' }, { source: 'n5', target: 'n6' }, { source: 'n1', target: 'n6' }
+          ]
+        },
+        '桂味': {
+          color: '#e07a5f', tagline: '纯粹桂香 · 萜品醇丰盈', signature: '芳樟醇 · 桂花清幽',
+          radar: [55, 95, 60, 45, 30, 35],
+          table: [
+            { id: 'n1', family: '果肉', compound: '芳樟醇', intensity: '12.7 μg/g' },
+            { id: 'n2', family: '果肉', compound: 'α-萜品醇', intensity: '8.9 μg/g' },
+            { id: 'n3', family: '果肉', compound: 'β-紫罗兰酮', intensity: '3.2 μg/g' },
+            { id: 'n4', family: '果肉', compound: '香叶醇', intensity: '定性显著' },
+            { id: 'n5', family: '果肉', compound: '柠檬烯', intensity: '共有特征' }
+          ],
+          nodes: [
+            { id: 'n1', name: '芳樟醇', en: 'Linalool', base2D: { x: 270, y: 130 }, pos3D: { x: -15, y: -20, z: 80 }, r: 29, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '核心呈香支柱，释放高纯桂花幽香。', tags: ['单萜醇', '桂花'] },
+            { id: 'n2', name: '萜品醇', en: 'α-Terpineol', base2D: { x: 380, y: 170 }, pos3D: { x: 110, y: 35, z: -40 }, r: 26, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '丁香花木韵，与芳樟醇形成二元峰。', tags: ['单萜醇', '丁香'] },
+            { id: 'n3', name: '紫罗兰酮', en: 'β-Ionone', base2D: { x: 175, y: 205 }, pos3D: { x: -90, y: 45, z: 45 }, r: 25, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '温暖浓郁紫罗兰与熟果甜香。', tags: ['降倍半萜', '甜香'] },
+            { id: 'n4', name: '香叶醇', en: 'Geraniol', base2D: { x: 355, y: 70 }, pos3D: { x: 100, y: -45, z: 50 }, r: 24, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '甜润重瓣玫瑰花露底蕴。', tags: ['无环单萜', '玫瑰'] },
+            { id: 'n5', name: '柠檬烯', en: 'Limonene', base2D: { x: 140, y: 120 }, pos3D: { x: -110, y: -30, z: -50 }, r: 24, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '微量柑橘前奏，提升通透感。', tags: ['单萜烯', '清亮'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n3' }, { source: 'n1', target: 'n5' },
+            { source: 'n2', target: 'n4' }, { source: 'n1', target: 'n2' }, { source: 'n2', target: 'n3' }
+          ]
+        },
+        '糯米糍': {
+          color: '#ea5378', tagline: '厚润如蜜 · 软糯脂韵', signature: 'α-月桂烯 · 软糯蜜甜',
+          radar: [40, 50, 45, 90, 60, 65],
+          table: [
+            { id: 'n1', family: '果肉', compound: 'α-月桂烯', intensity: '19.4%' },
+            { id: 'n2', family: '果肉', compound: 'DL-柠烯', intensity: '19.1%' },
+            { id: 'n3', family: '果肉', compound: '环己烯衍生物', intensity: '18.3%' },
+            { id: 'n4', family: '果肉', compound: 'α-榄香烯', intensity: '微量' },
+            { id: 'n5', family: '果肉', compound: '醋酸酯类', intensity: '微量' },
+            { id: 'n6', family: '果肉', compound: '辛二烯醇', intensity: '微量' }
+          ],
+          nodes: [
+            { id: 'n1', name: '月桂烯', en: 'α-Myrcene', base2D: { x: 330, y: 70 }, pos3D: { x: 70, y: -45, z: 60 }, r: 27, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '草本香脂味，特征性优势单萜。', tags: ['无环单萜', '树脂'] },
+            { id: 'n2', name: 'DL-柠烯', en: 'DL-Limonene', base2D: { x: 380, y: 170 }, pos3D: { x: 110, y: 35, z: -45 }, r: 27, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '甜暖柑橘气息，前香支柱。', tags: ['单萜', '温和'] },
+            { id: 'n3', name: '环己烯', en: 'Cyclohexene', base2D: { x: 265, y: 210 }, pos3D: { x: -10, y: 45, z: 65 }, r: 26, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '专有分子，提供软糯甜感与深层脂韵。', tags: ['单烯', '糯甜'] },
+            { id: 'n4', name: '榄香烯', en: 'α-Elemene', base2D: { x: 155, y: 190 }, pos3D: { x: -100, y: 35, z: -50 }, r: 24, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '沉着悠长的草木微辛。', tags: ['倍半萜', '定香'] },
+            { id: 'n5', name: '醋酸酯', en: 'Acetates', base2D: { x: 155, y: 90 }, pos3D: { x: -95, y: -35, z: 55 }, r: 25, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '成熟果肉饱满甜润果脂香。', tags: ['酯类', '果脂'] },
+            { id: 'n6', name: '辛二烯', en: 'Octadiene', base2D: { x: 245, y: 55 }, pos3D: { x: -15, y: -50, z: -45 }, r: 23, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '轻盈果青调，提升通透感。', tags: ['链烃', '青香'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n2' }, { source: 'n2', target: 'n3' },
+            { source: 'n3', target: 'n4' }, { source: 'n1', target: 'n5' }, { source: 'n1', target: 'n6' }
+          ]
+        },
+        '白糖罂': {
+          color: '#36173d', tagline: '纯正甘醇 · 基团平衡', signature: '基元母核 · 纯正甘醇',
+          radar: [60, 60, 55, 85, 30, 75],
+          table: [
+            { id: 'n1', family: '母体', compound: '烯类化合物', intensity: '骨架主体' },
+            { id: 'n2', family: '母体', compound: '醇类化合物', intensity: '清甜花源' },
+            { id: 'n3', family: '母体', compound: '酯类化合物', intensity: '果汁甜润' },
+            { id: 'n4', family: '母体', compound: '醛类化合物', intensity: '青鲜调控' },
+            { id: 'n5', family: '母体', compound: '萜类化合物', intensity: '特征支柱' },
+            { id: 'n6', family: '母体', compound: '烷类化合物', intensity: '表皮载体' }
+          ],
+          nodes: [
+            { id: 'n1', name: '烯类', en: 'Alkenes', base2D: { x: 265, y: 115 }, pos3D: { x: -10, y: -25, z: 85 }, r: 27, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '清亮活跃的呈香骨架基底。', tags: ['烃类', '骨架'] },
+            { id: 'n2', name: '醇类', en: 'Alcohols', base2D: { x: 370, y: 170 }, pos3D: { x: 105, y: 35, z: -35 }, r: 26, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '细腻花香与清润水分感。', tags: ['含羟基', '花露'] },
+            { id: 'n3', name: '酯类', en: 'Esters', base2D: { x: 265, y: 210 }, pos3D: { x: -15, y: 45, z: -55 }, r: 25, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '蜂蜜糖浆般饱满甘甜。', tags: ['酯键', '蜜糖'] },
+            { id: 'n4', name: '醛类', en: 'Aldehydes', base2D: { x: 145, y: 175 }, pos3D: { x: -100, y: 30, z: 50 }, r: 24, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '晨露果皮新鲜生脆气息。', tags: ['羰基', '生鲜'] },
+            { id: 'n5', name: '萜类', en: 'Terpenoids', base2D: { x: 155, y: 75 }, pos3D: { x: -90, y: -40, z: -50 }, r: 25, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '本真荔枝特征果韵核心。', tags: ['萜质', '果香'] },
+            { id: 'n6', name: '烷类', en: 'Alkanes', base2D: { x: 355, y: 65 }, pos3D: { x: 95, y: -45, z: 40 }, r: 23, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '天然缓释定香介质。', tags: ['饱和烃', '定香'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n2' }, { source: 'n1', target: 'n3' },
+            { source: 'n1', target: 'n4' }, { source: 'n1', target: 'n5' },
+            { source: 'n1', target: 'n6' }, { source: 'n2', target: 'n5' }
+          ]
+        },
+        '三月红': {
+          color: '#8F9F8E', tagline: '早春微辛 · 倍半萜丰沛', signature: '石竹烯 · 早春木香',
+          radar: [30, 45, 35, 40, 95, 30],
+          table: [
+            { id: 'n1', family: '嫩梢', compound: '石竹烯', intensity: '8种核心' },
+            { id: 'n2', family: '嫩叶', compound: 'α-古巴烯', intensity: '21种伴生' },
+            { id: 'n3', family: '嫩叶', compound: '大根香叶烯D', intensity: '主倍半萜' },
+            { id: 'n4', family: '嫩叶', compound: '反式石竹烯', intensity: '异构体' },
+            { id: 'n5', family: '嫩叶', compound: '植醇', intensity: '侧链醇' },
+            { id: 'n6', family: '嫩叶', compound: '联二苯衍生物', intensity: '特征烃' }
+          ],
+          nodes: [
+            { id: 'n1', name: '石竹烯', en: 'Caryophyllene', base2D: { x: 195, y: 70 }, pos3D: { x: -100, y: -40, z: 60 }, r: 27, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '干燥木香与丁香样辛香。', tags: ['倍半萜', '木辛'] },
+            { id: 'n2', name: '古巴烯', en: 'α-Copaene', base2D: { x: 350, y: 75 }, pos3D: { x: 110, y: -35, z: -50 }, r: 25, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '温和甜木香与微辛香料韵。', tags: ['三环萜', '甜木'] },
+            { id: 'n3', name: '香叶烯D', en: 'Germacrene D', base2D: { x: 385, y: 180 }, pos3D: { x: 115, y: 40, z: 65 }, r: 28, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '草本生青，调和早熟风味。', tags: ['倍半萜', '青鲜'] },
+            { id: 'n4', name: '反石竹烯', en: 'trans-Caryo.', base2D: { x: 265, y: 210 }, pos3D: { x: -10, y: 45, z: -60 }, r: 25, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '更强烈持久的干爽木质底香。', tags: ['异构体', '持久'] },
+            { id: 'n5', name: '植醇', en: 'Phytol', base2D: { x: 140, y: 180 }, pos3D: { x: -115, y: 35, z: -55 }, r: 24, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '微妙清雅的花木与膏香。', tags: ['二萜醇', '清幽'] },
+            { id: 'n6', name: '联二苯', en: 'Biphenyl', base2D: { x: 110, y: 95 }, pos3D: { x: -105, y: -30, z: 80 }, r: 26, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '嫩叶微量芳香特征指纹。', tags: ['芳香烃', '特异'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n4' }, { source: 'n2', target: 'n3' },
+            { source: 'n1', target: 'n5' }, { source: 'n2', target: 'n6' }, { source: 'n3', target: 'n5' }
+          ]
+        },
+        '挂绿': {
+          color: '#d64c4e', tagline: '芳樟醇拔萃 · 独有成分叠翠', signature: '芳樟醇 · 幽兰茶韵',
+          radar: [70, 98, 75, 60, 40, 50],
+          table: [
+            { id: 'n1', family: '果肉', compound: '芳樟醇', intensity: '2.86% (首位)' },
+            { id: 'n2', family: '果肉', compound: '柠檬烯', intensity: '前调特征' },
+            { id: 'n3', family: '果肉', compound: '独有成分群 I', intensity: '14种独有' },
+            { id: 'n4', family: '果肉', compound: '独有成分群 II', intensity: '微量定香' },
+            { id: 'n5', family: '果肉', compound: '独有成分群 III', intensity: '伴随组分' }
+          ],
+          nodes: [
+            { id: 'n1', name: '芳樟醇', en: 'Linalool', base2D: { x: 265, y: 130 }, pos3D: { x: -10, y: -20, z: 90 }, r: 29, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '相对丰度居首，空灵幽兰韵。', tags: ['单萜醇', '兰韵'] },
+            { id: 'n2', name: '柠檬烯', en: 'Limonene', base2D: { x: 385, y: 170 }, pos3D: { x: 105, y: 35, z: -40 }, r: 26, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '开扬明快柑橘，引出主干。', tags: ['单萜烯', '明快'] },
+            { id: 'n3', name: '独有峰 I', en: 'Biomarkers I', base2D: { x: 340, y: 215 }, pos3D: { x: 60, y: 45, z: 50 }, r: 24, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '挂绿专属未知单萜内酯。', tags: ['专有', '内酯'] },
+            { id: 'n4', name: '独有峰 II', en: 'Biomarkers II', base2D: { x: 180, y: 210 }, pos3D: { x: -80, y: 45, z: -55 }, r: 24, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '高级绿茶般甘醇回味。', tags: ['微量', '茶韵'] },
+            { id: 'n5', name: '独有峰 III', en: 'Biomarkers III', base2D: { x: 140, y: 115 }, pos3D: { x: -110, y: -35, z: 40 }, r: 24, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '杂环定香物，丰富深邃度。', tags: ['杂环', '深邃'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n2' }, { source: 'n1', target: 'n3' },
+            { source: 'n1', target: 'n4' }, { source: 'n1', target: 'n5' }, { source: 'n2', target: 'n3' }
+          ]
+        },
+        '黑叶': {
+          color: '#c93267', tagline: '玫瑰酒韵 · 香茅醇出众', signature: '香茅醇 · 玫瑰酒香',
+          radar: [75, 65, 90, 50, 45, 30],
+          table: [
+            { id: 'n1', family: '果肉', compound: '柠檬烯', intensity: '13.3%' },
+            { id: 'n2', family: '果肉', compound: '香茅醇', intensity: '16.6%' },
+            { id: 'n3', family: '发酵', compound: 'β-大马酮', intensity: '0.09%' },
+            { id: 'n4', family: '果肉', compound: '醇/酯类', intensity: '酒香协同' },
+            { id: 'n5', family: '果肉', compound: '微量成分', intensity: '定香修饰' }
+          ],
+          nodes: [
+            { id: 'n1', name: '柠檬烯', en: 'Limonene', base2D: { x: 260, y: 130 }, pos3D: { x: -15, y: -25, z: 85 }, r: 28, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '丰度达13.3%，阳光前调。', tags: ['单萜烃', '果鲜'] },
+            { id: 'n2', name: '香茅醇', en: 'Citronellol', base2D: { x: 380, y: 110 }, pos3D: { x: 105, y: -35, z: 50 }, r: 27, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '天竺葵与重瓣玫瑰样花香。', tags: ['单萜醇', '玫瑰'] },
+            { id: 'n3', name: '大马酮', en: 'Damascenone', base2D: { x: 365, y: 210 }, pos3D: { x: 90, y: 45, z: -40 }, r: 24, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '超低阈值熟果玫瑰甜香。', tags: ['玫瑰酮', '强香'] },
+            { id: 'n4', name: '醇/酯类', en: 'Esters & Alc.', base2D: { x: 175, y: 210 }, pos3D: { x: -80, y: 45, z: -55 }, r: 25, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '提供浓郁发酵果酒风韵。', tags: ['发酵', '果酒'] },
+            { id: 'n5', name: '微量物', en: 'Trace Comp.', base2D: { x: 140, y: 95 }, pos3D: { x: -110, y: -35, z: 40 }, r: 23, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '构筑深色成熟背景质感。', tags: ['微量', '底蕴'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n2' }, { source: 'n1', target: 'n4' },
+            { source: 'n2', target: 'n3' }, { source: 'n1', target: 'n5' }, { source: 'n4', target: 'n5' }
+          ]
+        },
+        '仙进奉': {
+          color: '#b75b66', tagline: '独秀蜜香 · 离子迁移谱特异', signature: '蜜香群 · 温润蜜香',
+          radar: [50, 60, 50, 70, 40, 96],
+          table: [
+            { id: 'n1', family: '果肉', compound: '蜜香化合物', intensity: '特征蜜香' },
+            { id: 'n2', family: '果肉', compound: '特征峰 A', intensity: '独立强峰' },
+            { id: 'n3', family: '果肉', compound: '特征峰 B', intensity: '中强指纹' },
+            { id: 'n4', family: '果肉', compound: '特征峰 C', intensity: '长韵定香' },
+            { id: 'n5', family: '果肉', compound: '伴生微量', intensity: '协同活性' }
+          ],
+          nodes: [
+            { id: 'n1', name: '蜜香基质', en: 'Honey Aroma', base2D: { x: 265, y: 130 }, pos3D: { x: -10, y: -20, z: 85 }, r: 28, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '稠密温润高山野蜂蜜香。', tags: ['芳香酯', '蜜香'] },
+            { id: 'n2', name: '特征峰 A', en: 'Peak Zone A', base2D: { x: 380, y: 105 }, pos3D: { x: 110, y: -40, z: 45 }, r: 26, fillFlat: '#f46f70', fillCel: 'url(#cel-coral)', textColor: '#383431', desc: '气相离子谱高挥发独立强峰。', tags: ['IMS', '指纹'] },
+            { id: 'n3', name: '特征峰 B', en: 'Peak Zone B', base2D: { x: 370, y: 210 }, pos3D: { x: 95, y: 45, z: -50 }, r: 25, fillFlat: '#ea5378', fillCel: 'url(#cel-berry)', textColor: '#383431', desc: '对应中段清润甘甜体验。', tags: ['IMS', '平衡'] },
+            { id: 'n4', name: '特征峰 C', en: 'Peak Zone C', base2D: { x: 175, y: 210 }, pos3D: { x: -80, y: 45, z: -55 }, r: 24, fillFlat: '#4a2253', fillCel: 'url(#cel-plum)', textColor: '#fbf8f5', desc: '奠定耐人寻味甘甜尾韵。', tags: ['IMS', '定香'] },
+            { id: 'n5', name: '活性微量', en: 'Active Trace', base2D: { x: 140, y: 100 }, pos3D: { x: -110, y: -35, z: 40 }, r: 23, fillFlat: '#f8c3c7', fillCel: 'url(#cel-soft-pink)', textColor: '#383431', desc: '前沿质谱待解析天然活性组分。', tags: ['前沿', '协同'] }
+          ],
+          links: [
+            { source: 'n1', target: 'n2' }, { source: 'n1', target: 'n3' },
+            { source: 'n1', target: 'n4' }, { source: 'n2', target: 'n3' }, { source: 'n1', target: 'n5' }
+          ]
+        }
+      };
+
+      const VARIETY_NAMES = Object.keys(ALL_VARIETIES_DATA);
+      let currentMainModeIdx = 0;
+      const mainModeThumb = document.getElementById('mainModeThumb');
+      let hoveredVariety = null;
+      let currentVarietyIndex = 0;
+      const track = document.getElementById('varietyTrack');
+      const thumb = document.getElementById('sliderThumb');
+      
+      const networkSvg = document.getElementById('networkSvg');
+      const linksGroup = document.getElementById('linksGroup');
+      const nodesGroup = document.getElementById('nodesGroup');
+      const orbitGroup = document.getElementById('orbitGroup');
+      const stageWrapper = document.getElementById('stageWrapper');
+      const detailDrawer = document.getElementById('detailDrawer');
+      const tableBody = document.getElementById('compoundTableBody');
+
+      let currentDim = '2D';
+      let activeNodes = [];
+      let activeLinks = [];
+      let nodeMap = {};
+      let rotX = 0.25, rotY = 0.35;
+      let velX = 0, velY = 0.003;
+      let isInteracting = false;
+      let pointerStart = { x: 0, y: 0 };
+      let pointerLast = { x: 0, y: 0 };
+      let pointerDistance = 0;
+      let active2DNode = null;
+      let selectedNodeId = null;
+      let idleTick = 0;
+
+      const CENTER_X = 270, CENTER_Y = 128, FOCAL = 330;
+
+      function switchMainMode(idx) {
+        currentMainModeIdx = idx;
+        mainModeThumb.style.transform = `translateX(${idx * 100}%)`;
+        document.querySelectorAll('#stageAromaApp .mode-slot').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+        document.getElementById('panelOverview').classList.toggle('active', idx === 0);
+        document.getElementById('panelDetail').classList.toggle('active', idx === 1);
+        if (idx === 0) renderRadar(); else updateSliderToIndex(currentVarietyIndex);
+      }
+
+      function renderRadar() {
+        const svg = document.getElementById('radarSvg');
+        if (!svg) return;
+        svg.innerHTML = '';
+        const cx = 170, cy = 108, r = 74;
+        const dims = ['柑橘清亮', '清幽花香', '重瓣玫瑰', '甜果脂香', '辛香木质', '蜜甜膏香'];
+        const n = dims.length;
+
+        for (let lvl = 1; lvl <= 4; lvl++) {
+          const rad = (r / 4) * lvl;
+          const pts = [];
+          for (let i = 0; i < n; i++) {
+            const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+            pts.push(`${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`);
+          }
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', pts.join(' '));
+          poly.setAttribute('fill', lvl % 2 === 0 ? 'rgba(212, 206, 196, 0.16)' : 'none');
+          poly.setAttribute('stroke', '#d4cec4');
+          poly.setAttribute('stroke-width', '0.8');
+          poly.setAttribute('stroke-dasharray', '2 2');
+          svg.appendChild(poly);
+        }
+
+        for (let i = 0; i < n; i++) {
+          const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+          line.setAttribute('x2', cx + r * Math.cos(a)); line.setAttribute('y2', cy + r * Math.sin(a));
+          line.setAttribute('stroke', '#e0dcd5');
+          svg.appendChild(line);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', cx + (r + 14) * Math.cos(a));
+          text.setAttribute('y', cy + (r + 12) * Math.sin(a));
+          text.setAttribute('font-size', '9');
+          text.setAttribute('fill', '#9e9890');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'central');
+          text.textContent = dims[i];
+          svg.appendChild(text);
+        }
+
+        VARIETY_NAMES.forEach(name => {
+          const v = ALL_VARIETIES_DATA[name];
+          const isHovered = (hoveredVariety === name);
+          const hasFocus = !!hoveredVariety;
+
+          const pts = v.radar.map((val, i) => {
+            const rad = (val / 100) * r;
+            const a = (Math.PI * 2 / n) * i - Math.PI / 2;
+            return `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`;
+          }).join(' ');
+
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', pts);
+          poly.setAttribute('fill', v.color);
+          poly.setAttribute('fill-opacity', isHovered ? '0.28' : (hasFocus ? '0.02' : '0.06'));
+          poly.setAttribute('stroke', v.color);
+          poly.setAttribute('stroke-width', isHovered ? '2.2' : (hasFocus ? '0.4' : '1.2'));
+          poly.setAttribute('opacity', hasFocus ? (isHovered ? '1' : '0.2') : '0.85');
+          svg.appendChild(poly);
+        });
+      }
+
+      function initLegend() {
+        const legendGrid = document.getElementById('radarLegendGrid');
+        if (!legendGrid) return;
+        legendGrid.innerHTML = '';
+        VARIETY_NAMES.forEach((name, idx) => {
+          const v = ALL_VARIETIES_DATA[name];
+          const item = document.createElement('div');
+          item.className = 'legend-item';
+          item.innerHTML = `
+            <span class="legend-dot" style="background:${v.color}"></span>
+            <span class="legend-name">${name}</span>
+            <span class="legend-meta">· ${v.signature}</span>
+          `;
+
+          item.addEventListener('mouseenter', () => {
+            hoveredVariety = name;
+            document.querySelectorAll('#stageAromaApp .legend-item').forEach(it => it.classList.remove('is-focus'));
+            item.classList.add('is-focus');
+            document.getElementById('radarStateTip').textContent = `${name} (${v.tagline})`;
+            renderRadar();
+          });
+
+          item.addEventListener('mouseleave', () => {
+            hoveredVariety = null;
+            item.classList.remove('is-focus');
+            document.getElementById('radarStateTip').textContent = '点击项直接切换至微观';
+            renderRadar();
+          });
+
+          item.addEventListener('click', () => {
+            currentVarietyIndex = idx;
+            switchMainMode(1);
+          });
+
+          legendGrid.appendChild(item);
+        });
+      }
+
+      function updateSliderToIndex(index) {
+        currentVarietyIndex = index;
+        if (thumb) thumb.style.transform = `translateX(${index * 100}%)`;
+        document.querySelectorAll('#stageAromaApp .track-slot').forEach((slot, i) => slot.classList.toggle('active', i === index));
+        loadVariety(VARIETY_NAMES[index]);
+      }
+
+      function initSlider() {
+        VARIETY_NAMES.forEach((name, index) => {
+          const slot = document.createElement('button');
+          slot.className = `track-slot ${index === 0 ? 'active' : ''}`;
+          slot.textContent = name;
+          slot.setAttribute('data-idx', index);
+          slot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            updateSliderToIndex(index);
+          });
+          track.appendChild(slot);
+        });
+
+        let isTrackDragging = false;
+        function handleTrackDrag(e) {
+          const rect = track.getBoundingClientRect();
+          const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+          const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+          const targetIndex = Math.min(7, Math.max(0, Math.floor((x / rect.width) * 8)));
+          if (targetIndex !== currentVarietyIndex) updateSliderToIndex(targetIndex);
+        }
+
+        track.addEventListener('pointerdown', (e) => {
+          isTrackDragging = true;
+          handleTrackDrag(e);
+          window.addEventListener('pointermove', handleTrackDrag);
+        });
+
+        window.addEventListener('pointerup', () => {
+          if (isTrackDragging) {
+            isTrackDragging = false;
+            window.removeEventListener('pointermove', handleTrackDrag);
+          }
+        });
+      }
+
+      function buildOrbit() {
+        if (!orbitGroup) return;
+        orbitGroup.innerHTML = '';
+        const ring = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        ring.setAttribute('id', 'orbitEquator');
+        ring.setAttribute('cx', CENTER_X);
+        ring.setAttribute('cy', CENTER_Y);
+        ring.setAttribute('rx', '140');
+        ring.setAttribute('ry', '38');
+        ring.setAttribute('fill', 'none');
+        ring.setAttribute('stroke', '#d4cec4');
+        ring.setAttribute('stroke-width', '1');
+        ring.setAttribute('stroke-dasharray', '3 3');
+        ring.setAttribute('opacity', '0.6');
+        orbitGroup.appendChild(ring);
+      }
+
+      function loadVariety(name) {
+        closeDrawer();
+        const v = ALL_VARIETIES_DATA[name];
+        document.getElementById('detailVarietyTitle').textContent = `${name}`;
+        document.getElementById('detailVarietySub').textContent = v.tagline;
+
+        activeNodes = JSON.parse(JSON.stringify(v.nodes));
+        activeLinks = JSON.parse(JSON.stringify(v.links));
+
+        nodeMap = {};
+        activeNodes.forEach(n => {
+          nodeMap[n.id] = n;
+          n.curX = n.base2D.x;
+          n.curY = n.base2D.y;
+          n.curR = n.r;
+          n.curZ = 0;
+          n.curOpacity = 1;
+        });
+
+        linksGroup.innerHTML = '';
+        activeLinks.forEach(link => {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('id', `link-${link.source}-${link.target}`);
+          line.setAttribute('class', 'bubble-link');
+          line.setAttribute('marker-end', 'url(#arrowHead)');
+          linksGroup.appendChild(line);
+        });
+
+        nodesGroup.innerHTML = '';
+        activeNodes.forEach(node => {
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('class', 'bubble-node');
+          g.setAttribute('id', `node-${node.id}`);
+
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('r', node.r);
+          circle.setAttribute('fill', currentDim === '3D' ? node.fillCel : node.fillFlat);
+          circle.setAttribute('stroke', 'none');
+          g.appendChild(circle);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('font-size', '9');
+          text.setAttribute('font-weight', '400');
+          text.setAttribute('letter-spacing', '0.03em');
+          text.setAttribute('fill', '#5c554e');
+          text.setAttribute('dominant-baseline', 'central');
+          text.setAttribute('text-anchor', 'start');
+          text.setAttribute('x', node.r + 5);
+          text.setAttribute('pointer-events', 'none');
+          text.setAttribute('paint-order', 'stroke');
+          text.setAttribute('stroke', 'rgba(247, 244, 238, 0.92)');
+          text.setAttribute('stroke-width', '2.4');
+          text.setAttribute('stroke-linejoin', 'round');
+          text.textContent = node.name;
+          g.appendChild(text);
+
+          nodesGroup.appendChild(g);
+
+          g.addEventListener('mouseenter', () => {
+            if (!selectedNodeId && !isInteracting) setHighlight(node.id);
+          });
+          g.addEventListener('mouseleave', () => {
+            if (!selectedNodeId && !isInteracting) resetHighlight();
+          });
+        });
+
+        tableBody.innerHTML = v.table.map(row => `
+          <tr data-id="${row.id}">
+            <td>${row.compound}</td>
+            <td class="col-intensity">${row.intensity}</td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('#stageAromaApp #compoundTableBody tr').forEach(tr => {
+          tr.onclick = () => openDrawer(tr.getAttribute('data-id'));
+        });
+      }
+
+      function project3D(x, y, z) {
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+
+        const x1 = x * cosY + z * sinY;
+        const z1 = -x * sinY + z * cosY;
+        const y2 = y * cosX - z1 * sinX;
+        const z2 = y * sinX + z1 * cosX;
+
+        const scale = FOCAL / (FOCAL + z2);
+        return {
+          x: CENTER_X + x1 * scale,
+          y: CENTER_Y + y2 * scale,
+          z: z2,
+          scale: scale,
+          opacity: Math.max(0.4, Math.min(1, (z2 + 140) / 280))
+        };
+      }
+
+      function animLoop() {
+        idleTick += 0.02;
+
+        if (currentDim === '3D') {
+          if (!isInteracting) {
+            velX *= 0.94;
+            velY = velY * 0.94 + 0.0002;
+            rotX += velX;
+            rotY += velY;
+            rotX = Math.max(-0.65, Math.min(0.65, rotX));
+          }
+          const eq = document.getElementById('orbitEquator');
+          if (eq) eq.setAttribute('transform', `rotate(${rotY * (180 / Math.PI) * 0.25}, ${CENTER_X}, ${CENTER_Y})`);
+        }
+
+        activeNodes.forEach((node, i) => {
+          let destX, destY, destR, destOpacity, destZ;
+
+          if (currentDim === '2D') {
+            const amp = (active2DNode === node) ? 0 : 2.2;
+            destX = node.base2D.x + Math.sin(idleTick + i * 1.5) * amp;
+            destY = node.base2D.y + Math.cos(idleTick * 0.8 + i * 1.1) * (amp * 0.8);
+            destR = node.r;
+            destOpacity = 1;
+            destZ = 0;
+          } else {
+            const p = project3D(node.pos3D.x, node.pos3D.y, node.pos3D.z);
+            destX = p.x;
+            destY = p.y;
+            destR = node.r * (0.82 + p.scale * 0.22);
+            destOpacity = p.opacity;
+            destZ = p.z;
+          }
+
+          node.curX += (destX - node.curX) * 0.15;
+          node.curY += (destY - node.curY) * 0.15;
+          node.curR += (destR - node.curR) * 0.15;
+          node.curOpacity += (destOpacity - node.curOpacity) * 0.15;
+          node.curZ = destZ;
+
+          const g = document.getElementById(`node-${node.id}`);
+          if (g) {
+            g.setAttribute('transform', `translate(${node.curX}, ${node.curY})`);
+            const circle = g.querySelector('circle');
+            circle.setAttribute('r', node.curR);
+            circle.setAttribute('fill', currentDim === '3D' ? node.fillCel : node.fillFlat);
+
+            const textEl = g.querySelector('text');
+            if (textEl) {
+              const offset = node.curR + 5;
+              const approxW = node.name.length * 9 + 4;
+              if (node.curX + offset + approxW > 534) {
+                textEl.setAttribute('x', -offset);
+                textEl.setAttribute('text-anchor', 'end');
+              } else {
+                textEl.setAttribute('x', offset);
+                textEl.setAttribute('text-anchor', 'start');
+              }
+            }
+
+            if (!networkSvg.classList.contains('is-focusing')) {
+              g.style.opacity = node.curOpacity;
+            }
+          }
+        });
+
+        activeLinks.forEach(link => {
+          const s = nodeMap[link.source];
+          const t = nodeMap[link.target];
+          if (!s || !t) return;
+          const dx = t.curX - s.curX;
+          const dy = t.curY - s.curY;
+          const dist = Math.hypot(dx, dy) || 1;
+
+          const x1 = s.curX + (dx / dist) * s.curR;
+          const y1 = s.curY + (dy / dist) * s.curR;
+          const x2 = t.curX - (dx / dist) * (t.curR + 4);
+          const y2 = t.curY - (dy / dist) * (t.curR + 4);
+
+          const lineEl = document.getElementById(`link-${link.source}-${link.target}`);
+          if (lineEl) {
+            lineEl.setAttribute('x1', x1);
+            lineEl.setAttribute('y1', y1);
+            lineEl.setAttribute('x2', x2);
+            lineEl.setAttribute('y2', y2);
+
+            if (!networkSvg.classList.contains('is-focusing')) {
+              lineEl.style.opacity = currentDim === '3D' ? (s.curOpacity + t.curOpacity) * 0.42 : 0.75;
+            }
+          }
+        });
+
+        requestAnimationFrame(animLoop);
+      }
+
+      function getPointerPos(e) {
+        if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        return { x: e.clientX, y: e.clientY };
+      }
+
+      function getSVGCoords(pos) {
+        const pt = networkSvg.createSVGPoint();
+        pt.x = pos.x; pt.y = pos.y;
+        return pt.matrixTransform(networkSvg.getScreenCTM().inverse());
+      }
+
+      stageWrapper.addEventListener('pointerdown', (e) => {
+        const pos = getPointerPos(e);
+        isInteracting = true;
+        pointerStart = { x: pos.x, y: pos.y };
+        pointerLast = { x: pos.x, y: pos.y };
+        pointerDistance = 0;
+
+        if (currentDim === '2D') {
+          const svgPt = getSVGCoords(pos);
+          for (let i = activeNodes.length - 1; i >= 0; i--) {
+            const n = activeNodes[i];
+            if (Math.hypot(svgPt.x - n.curX, svgPt.y - n.curY) <= n.r) {
+              active2DNode = n;
+              break;
+            }
+          }
+        }
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!isInteracting) return;
+        const pos = getPointerPos(e);
+        const dx = pos.x - pointerLast.x;
+        const dy = pos.y - pointerLast.y;
+        pointerDistance += Math.hypot(dx, dy);
+
+        if (currentDim === '3D') {
+          velY = dx * 0.007;
+          velX = -dy * 0.007;
+          rotY += velY;
+          rotX += velX;
+          rotX = Math.max(-0.65, Math.min(0.65, rotX));
+        } else if (active2DNode) {
+          const svgPt = getSVGCoords(pos);
+          active2DNode.base2D.x = Math.max(35, Math.min(505, svgPt.x));
+          active2DNode.base2D.y = Math.max(35, Math.min(220, svgPt.y));
+        }
+        pointerLast = { x: pos.x, y: pos.y };
+      });
+
+      window.addEventListener('pointerup', (e) => {
+        if (!isInteracting) return;
+        isInteracting = false;
+        active2DNode = null;
+
+        if (pointerDistance < 6) {
+          const pos = getPointerPos(e);
+          const svgPt = getSVGCoords(pos);
+          let clicked = null;
+
+          for (let i = activeNodes.length - 1; i >= 0; i--) {
+            const n = activeNodes[i];
+            if (Math.hypot(svgPt.x - n.curX, svgPt.y - n.curY) <= n.curR + 5) {
+              clicked = n;
+              break;
+            }
+          }
+
+          if (clicked) openDrawer(clicked.id);
+          else closeDrawer();
+        }
+      });
+
+      function openDrawer(nodeId) {
+        const node = nodeMap[nodeId];
+        if (!node) return;
+
+        selectedNodeId = node.id;
+        setHighlight(node.id);
+
+        document.getElementById('drawerTitle').textContent = node.name;
+        document.getElementById('drawerEn').textContent = node.en;
+        document.getElementById('drawerBody').textContent = node.desc;
+        document.getElementById('drawerTags').innerHTML = node.tags.map(t => `<span class="drawer-tag">${t}</span>`).join('');
+        detailDrawer.classList.add('show');
+
+        document.querySelectorAll('#stageAromaApp #compoundTableBody tr').forEach(row => {
+          if (row.getAttribute('data-id') === node.id) {
+            row.classList.add('is-highlight');
+            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            row.classList.remove('is-highlight');
+          }
+        });
+      }
+
+      function closeDrawer() {
+        selectedNodeId = null;
+        if(detailDrawer) detailDrawer.classList.remove('show');
+        resetHighlight();
+        document.querySelectorAll('#stageAromaApp #compoundTableBody tr').forEach(row => row.classList.remove('is-highlight'));
+      }
+
+      function setHighlight(nodeId) {
+        networkSvg.classList.add('is-focusing');
+        document.querySelectorAll('#stageAromaApp .bubble-node').forEach(el => el.classList.remove('is-active'));
+        document.querySelectorAll('#stageAromaApp .bubble-link').forEach(el => el.classList.remove('is-active'));
+
+        const nodeEl = document.getElementById(`node-${nodeId}`);
+        if (nodeEl) nodeEl.classList.add('is-active');
+
+        activeLinks.forEach(l => {
+          if (l.source === nodeId || l.target === nodeId) {
+            const lineEl = document.getElementById(`link-${l.source}-${l.target}`);
+            if (lineEl) lineEl.classList.add('is-active');
+            const otherId = (l.source === nodeId) ? l.target : l.source;
+            const otherNodeEl = document.getElementById(`node-${otherId}`);
+            if (otherNodeEl) otherNodeEl.classList.add('is-active');
+          }
+        });
+      }
+
+      function resetHighlight() {
+        if (selectedNodeId) {
+          setHighlight(selectedNodeId);
+          return;
+        }
+        if(networkSvg) networkSvg.classList.remove('is-focusing');
+        document.querySelectorAll('#stageAromaApp .bubble-node').forEach(el => el.classList.remove('is-active'));
+        document.querySelectorAll('#stageAromaApp .bubble-link').forEach(el => el.classList.remove('is-active'));
+      }
+
+      function setDim(dim) {
+        currentDim = dim;
+        document.getElementById('btn2D-app').classList.toggle('active', dim === '2D');
+        document.getElementById('btn3D-app').classList.toggle('active', dim === '3D');
+
+        if (dim === '3D') {
+          orbitGroup.style.opacity = '1';
+          document.getElementById('stageHint').textContent = '拖动旋转 3D · 单击节点';
+        } else {
+          orbitGroup.style.opacity = '0';
+          document.getElementById('stageHint').textContent = '拖拽调位 · 单击节点';
+        }
+      }
+
+      renderRadar();
+      initLegend();
+      initSlider();
+      buildOrbit();
+      updateSliderToIndex(0);
+      requestAnimationFrame(animLoop);
+
+      return { switchMainMode, setDim, closeDrawer };
+    })();
+
+    window.addEventListener('scroll', updateAllScrollDrivenCharts, { passive: true });
+    updateAllScrollDrivenCharts();
+  </script>
+</body>
+</html>

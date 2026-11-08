@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soft Lychee. — 岭南荔枝超写实标本实验室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #e9e5dc;
+            --text-main: #181919;
+            --text-sub: #787a78;
+            --panel-bg: rgba(255, 255, 255, 0.82);
+            --panel-border: rgba(0, 0, 0, 0.07);
+            --pill-active-bg: #1c1d1e;
+            --pill-active-text: #ffffff;
+            --pill-inactive-bg: rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+        }
+
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            cursor: grab;
+        }
+        #webgl-canvas:active {
+            cursor: grabbing;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 38px 48px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+        .header-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: #3b8254;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .hero {
+            position: absolute;
+            top: 96px;
+            left: 48px;
+            pointer-events: auto;
+        }
+        .hero h1 {
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: clamp(62px, 7.2vw, 114px);
+            font-weight: 400;
+            line-height: 0.88;
+            letter-spacing: -0.03em;
+            color: #171819;
+            margin-bottom: 22px;
+        }
+        .hero-desc {
+            font-size: 13px;
+            line-height: 1.68;
+            color: #6a6c6b;
+            font-weight: 400;
+            max-width: 290px;
+        }
+
+        .controls-card {
+            pointer-events: auto;
+            position: absolute;
+            right: 48px;
+            bottom: 48px;
+            width: 338px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            padding: 24px 26px;
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 17px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            color: #2b2d2f;
+        }
+        .panel-index {
+            color: #929594;
+            letter-spacing: 0.08em;
+        }
+
+        .variety-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .variety-chip {
+            background: var(--pill-inactive-bg);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            color: #555756;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .variety-chip.active {
+            background: var(--pill-active-bg);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .dot-indicator {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-block;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #525453;
+            font-weight: 500;
+        }
+        .slider-val-tag {
+            font-size: 11px;
+            color: #929493;
+            font-weight: 400;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #dad5cb;
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #1c1d1e;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.22);
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .btn-primary {
+            background: #1d1f1e;
+            color: #fbfbfb;
+            border: none;
+            border-radius: 100px;
+            padding: 12px 18px;
+            font-size: 12.5px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        .btn-secondary {
+            background: #ffffff;
+            color: #2b2d2f;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 100px;
+            padding: 12px 14px;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11.5px;
+            color: #727473;
+        }
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .toggle-item input {
+            cursor: pointer;
+            accent-color: #1c1d1e;
+        }
+
+        .bottom-stats {
+            pointer-events: auto;
+            position: absolute;
+            left: 48px;
+            bottom: 44px;
+            display: flex;
+            gap: 38px;
+            align-items: flex-end;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stat-value {
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 30px;
+            line-height: 1;
+            color: #171819;
+        }
+        .stat-title {
+            font-size: 9.5px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8a8d8c;
+            font-weight: 600;
+        }
+
+        .bottom-tag {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #9c9f9e;
+            pointer-events: none;
+        }
+
+        .hint-badge {
+            position: absolute;
+            top: calc(50% - 140px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.78);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            color: #555756;
+            pointer-events: none;
+            opacity: 0.88;
+            transition: opacity 0.4s;
+            animation: floatSlow 3s ease-in-out infinite alternate;
+        }
+        @keyframes floatSlow {
+            from { transform: translate(-50%, 0px); }
+            to { transform: translate(-50%, -6px); }
+        }
+
+        @media (max-width: 900px) {
+            .hero { top: 70px; left: 24px; }
+            .hero h1 { font-size: 48px; }
+            .controls-card { right: 20px; bottom: 20px; width: calc(100vw - 40px); }
+            .bottom-stats { display: none; }
+            .ui-layer { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="hint-badge" id="hintBadge">✦ 360° 随动观察 · 滚轮缩放画面 · 触控按压出汁</div>
+
+    <div class="ui-layer">
+        <header class="header">
+            <div>A BOTANICAL TACTILE LAB &nbsp;/&nbsp; NO. 008</div>
+            <div class="header-status">VISCOELASTIC FIDELITY · SMOOTH ZOOM ENABLED</div>
+        </header>
+
+        <div class="hero">
+            <h1 id="heroTitle">Guiwei.</h1>
+            <div class="hero-desc" id="heroDesc">
+                果壳如赭，密生锐尖棘突。<br>
+                中空果托随动倾角，凝脂微粒闪烁。<br>
+                肉质爽脆微弹，幽微桂香四溢。
+            </div>
+        </div>
+
+        <div class="bottom-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="statTss">19.8%</div>
+                <div class="stat-title">Brix TSS (糖度)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statTexture">爽脆 · 桂花香</div>
+                <div class="stat-title">Texture (质地)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statSeed">≥ 65%</div>
+                <div class="stat-title">焦核率 / 食率</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statJuice">极丰沛</div>
+                <div class="stat-title">Juiciness (汁液感)</div>
+            </div>
+        </div>
+
+        <div class="bottom-tag">CANTON BOTANICAL LAB · SPECIMEN FIDELITY</div>
+
+        <aside class="controls-card">
+            <div class="panel-header">
+                <span>THE SPECIMEN (品种)</span>
+                <span class="panel-index" id="specimenIndex">02 / 08</span>
+            </div>
+
+            <div class="variety-grid" id="varietyGrid"></div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>剥皮深度 (Peeling)</span>
+                    <span class="slider-val-tag" id="peelValText">48% (参考图状态)</span>
+                </div>
+                <input type="range" id="peelSlider" min="0" max="100" value="48">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>果肉质地硬度 (Firmness)</span>
+                    <span class="slider-val-tag" id="firmnessValText">88% · 紧实爽脆</span>
+                </div>
+                <input type="range" id="firmnessSlider" min="10" max="100" value="88">
+            </div>
+
+            <div class="button-row">
+                <button class="btn-primary" id="btnSqueeze">
+                    <span>指尖按压出汁 ↗</span>
+                </button>
+                <button class="btn-secondary" id="btnReset">还原视角</button>
+            </div>
+
+            <div class="toggle-row">
+                <label class="toggle-item">
+                    <input type="checkbox" id="chkSeed" checked>
+                    <span>透视焦核 (Seed)</span>
+                </label>
+                <label class="toggle-item">
+                    <input type="checkbox" id="chkAudio" checked>
+                    <span>触感音效 (ASMR)</span>
+                </label>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        /* ========================================================
+           1. 真实品种量化数据（自然、克制的质地梯度）
+           ======================================================== */
+        const LYCHEE_VARIETIES = [
+            {
+                id: 'nuomici',
+                name: '糯米糍',
+                tss: '18~21%',
+                texture: '软滑凝脂 · 细嫩',
+                seedRate: '焦核 ≥95%',
+                seedScale: 0.18,
+                juiceLevel: '极多汁 (柔滑)',
+                juiceIntensity: 1.35,
+                burstSpurt: 0.10,
+                dripAmount: 0.90,
+                elasticity: 25,          // 软滑凝脂，受力微陷而自然舒展
+                colorShell: '#a52628',
+                colorSpike: '#5e1014',
+                colorSeam: '#b8906a',
+                pulpColor: '#fff9ee',
+                pulpTransmission: 0.68,
+                desc: '红皮微突平缓。果肉极细嫩软滑，指尖按压有细腻深陷感，回弹温润柔缓。'
+            },
+            {
+                id: 'guiwei',
+                name: '桂味',
+                tss: '17~21%',
+                texture: '爽脆 · 桂花香',
+                seedRate: '焦核 ≥65%',
+                seedScale: 0.28,
+                juiceLevel: '极多汁 (爽弹)',
+                juiceIntensity: 1.25,
+                burstSpurt: 0.40,
+                dripAmount: 0.60,
+                elasticity: 88,          // 紧致硬朗，按压轻微抗力
+                colorShell: '#9b2e23',
+                colorSpike: '#55150f',
+                colorSeam: '#bca075',
+                pulpColor: '#fcfcf7',
+                pulpTransmission: 0.52,
+                desc: '壳薄刺硬脆，内壁白而中空。果肉双峰如白玉，爽脆致密无渣，清甜蕴含桂香。'
+            },
+            {
+                id: 'heiye',
+                name: '黑叶',
+                tss: '16~20%',
+                texture: '软嫩滑口 · 多汁',
+                seedRate: '中大核',
+                seedScale: 0.58,
+                juiceLevel: '中等多汁',
+                juiceIntensity: 0.95,
+                burstSpurt: 0.15,
+                dripAmount: 0.85,
+                elasticity: 40,
+                colorShell: '#6e1d21',
+                colorSpike: '#3a0c0f',
+                colorSeam: '#9c7b57',
+                pulpColor: '#fbf4ea',
+                pulpTransmission: 0.65,
+                desc: '暗红龟裂平整，果肉软嫩滑口，汁液丰盈，传统浓郁风味。'
+            },
+            {
+                id: 'sanyuehong',
+                name: '三月红',
+                tss: '15~20%',
+                texture: '微韧微酸 · 鲜弹',
+                seedRate: '核较大 (63%)',
+                seedScale: 0.65,
+                juiceLevel: '多汁 (开胃)',
+                juiceIntensity: 1.0,
+                burstSpurt: 0.20,
+                dripAmount: 0.80,
+                elasticity: 58,
+                colorShell: '#8a3424',
+                colorSpike: '#4e1a11',
+                colorSeam: '#aa8c5e',
+                pulpColor: '#fbf2e3',
+                pulpTransmission: 0.60,
+                desc: '壳厚刺大，果肉黄白微带韧感。甜中带适度果酸，多汁生津。'
+            },
+            {
+                id: 'feizixiao',
+                name: '妃子笑',
+                tss: '16.5~19%',
+                texture: '清脆微弹 · 多汁',
+                seedRate: '大/小核约半',
+                seedScale: 0.52,
+                juiceLevel: '多汁 (丰沛)',
+                juiceIntensity: 1.0,
+                burstSpurt: 0.25,
+                dripAmount: 0.75,
+                elasticity: 72,
+                colorShell: '#8a2b25',
+                colorSpike: '#4e1411',
+                colorSeam: '#b59265',
+                pulpColor: '#fff8eb',
+                pulpTransmission: 0.58,
+                desc: '红绿相间，果肩常带微绿。龟裂片微尖，中空硬壳托覆，肉厚爽脆多汁。'
+            },
+            {
+                id: 'xianjinfeng',
+                name: '仙进奉',
+                tss: '19~21%',
+                texture: '爽脆致密 · 蜜香',
+                seedRate: '焦核 ≥85%',
+                seedScale: 0.26,
+                juiceLevel: '极多汁 (醇厚)',
+                juiceIntensity: 1.2,
+                burstSpurt: 0.22,
+                dripAmount: 0.78,
+                elasticity: 80,
+                colorShell: '#962325',
+                colorSpike: '#521013',
+                colorSeam: '#b58f66',
+                pulpColor: '#fff5e8',
+                pulpTransmission: 0.55,
+                desc: '厚皮耐储，肉厚爽脆如蜜。酸甜比例极高，蜜香浓郁持久。'
+            },
+            {
+                id: 'baitangying',
+                name: '白糖罂',
+                tss: '18~20%',
+                texture: '纯甜爽脆 · 蜜润',
+                seedRate: '核率 5.8%',
+                seedScale: 0.38,
+                juiceLevel: '多汁 (润口)',
+                juiceIntensity: 1.1,
+                burstSpurt: 0.20,
+                dripAmount: 0.80,
+                elasticity: 84,
+                colorShell: '#a92c24',
+                colorSpike: '#5c1311',
+                colorSeam: '#be986a',
+                pulpColor: '#fdf7eb',
+                pulpTransmission: 0.54,
+                desc: '薄皮微尖，果身圆正。肉脆凝脂，纯甜有蜜香，早熟名品。'
+            },
+            {
+                id: 'gualv',
+                name: '增城挂绿',
+                tss: '17~21%',
+                texture: '白玉冰糖 · 紧致硬脆',
+                seedRate: '小核率高',
+                seedScale: 0.35,
+                juiceLevel: '凝脂 (多汁不溢)',
+                juiceIntensity: 0.85,
+                burstSpurt: 0.0,
+                dripAmount: 1.0,
+                elasticity: 95,
+                colorShell: '#882d24',
+                colorSpike: '#4c1511',
+                colorSeam: '#88985c',
+                pulpColor: '#fdfdfa',
+                pulpTransmission: 0.50,
+                desc: '红袍绿丝带，爽脆如白玉。剥壳不流汁，咀嚼甘脆如冰糖，幽香不绝。'
+            }
+        ];
+
+        let currentVarietyIdx = 1;
+        let currentVariety = LYCHEE_VARIETIES[currentVarietyIdx];
+
+        function getFirmnessLabel(val) {
+            if (val >= 85) return `${val}% · 紧实硬脆 (爽脆抗压)`;
+            if (val >= 68) return `${val}% · 清脆致密 (爽口微弹)`;
+            if (val >= 45) return `${val}% · 柔韧饱满 (软硬适中)`;
+            if (val >= 28) return `${val}% · 软滑细嫩 (受压微陷)`;
+            return `${val}% · 极软凝脂 (轻柔回弹)`;
+        }
+
+        // 自然克制的形变深度（软肉 17% ~ 硬肉 5.5%）
+        function getDynamicSquishDepth() {
+            const k = (currentVariety.elasticity - 10) / 90; // 0 ~ 1
+            return THREE.MathUtils.lerp(0.17, 0.055, k);
+        }
+
+        /* ========================================================
+           2. 物理与自然 ASMR 音效
+           ======================================================== */
+        let peelProgress = 0.48;
+        let squishDeform = { x: 1, y: 1, z: 1 };
+        let squishVelocity = { x: 0, y: 0, z: 0 };
+        let isDragging = false;
+        let lastMousePos = { x: 0, y: 0 };
+
+        let targetRotX = 0;
+        let targetRotY = 0;
+
+        // ★ 画面缩放状态管理
+        let targetCameraZ = 4.6;
+        const minCameraZ = 2.4;
+        const maxCameraZ = 6.8;
+
+        let audioCtx = null;
+        function playSquishSound(intensity = 1.0) {
+            if (!document.getElementById('chkAudio').checked) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                const k = (currentVariety.elasticity - 10) / 90;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                const startFreq = THREE.MathUtils.lerp(180, 420, k) + Math.random() * 20;
+                const endFreq = THREE.MathUtils.lerp(60, 140, k);
+                const dur = THREE.MathUtils.lerp(0.12, 0.05, k);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(startFreq, now);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, now + dur);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(THREE.MathUtils.lerp(450, 1200, k), now);
+
+                gain.gain.setValueAtTime(0.08 * intensity, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + dur + 0.02);
+
+                if (k > 0.6) {
+                    const snap = audioCtx.createOscillator();
+                    const snapGain = audioCtx.createGain();
+                    snap.type = 'triangle';
+                    snap.frequency.setValueAtTime(650 + k * 300, now);
+                    snap.frequency.exponentialRampToValueAtTime(200, now + 0.03);
+                    snapGain.gain.setValueAtTime(0.03 * k * intensity, now);
+                    snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
+                    snap.connect(snapGain);
+                    snapGain.connect(audioCtx.destination);
+                    snap.start(now);
+                    snap.stop(now + 0.035);
+                }
+            } catch(e) {}
+        }
+
+        /* ========================================================
+           3. Three.js 场景与渲染
+           ======================================================== */
+        const canvas = document.getElementById('webgl-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.08;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe9e5dc);
+
+        const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0.08, targetCameraZ);
+
+        const lycheeContainer = new THREE.Group();
+        lycheeContainer.position.y = -0.05;
+        scene.add(lycheeContainer);
+
+        function createStudioEnvironment(renderer) {
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            pmremGenerator.compileEquirectangularShader();
+
+            const envScene = new THREE.Scene();
+            envScene.background = new THREE.Color(0xdad5cb);
+
+            const softbox1 = new THREE.Mesh(
+                new THREE.PlaneGeometry(8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xfff3e3, side: THREE.DoubleSide })
+            );
+            softbox1.position.set(5, 7, 4);
+            softbox1.lookAt(0, 0, 0);
+            envScene.add(softbox1);
+
+            const softbox2 = new THREE.Mesh(
+                new THREE.PlaneGeometry(6, 6),
+                new THREE.MeshBasicMaterial({ color: 0xe0ecf8, side: THREE.DoubleSide })
+            );
+            softbox2.position.set(-6, 2, 3);
+            softbox2.lookAt(0, 0, 0);
+            envScene.add(softbox2);
+
+            const softbox3 = new THREE.Mesh(
+                new THREE.PlaneGeometry(10, 4),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+            );
+            softbox3.position.set(0, 4, -6);
+            softbox3.lookAt(0, 0, 0);
+            envScene.add(softbox3);
+
+            const envTarget = pmremGenerator.fromScene(envScene, 0.04);
+            pmremGenerator.dispose();
+            return envTarget.texture;
+        }
+
+        const studioEnvMap = createStudioEnvironment(renderer);
+        scene.environment = studioEnvMap;
+
+        const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.85);
+        scene.add(ambientLight);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(2.8, 4.5, 3.5);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 1024;
+        keyLight.shadow.mapSize.height = 1024;
+        keyLight.shadow.bias = -0.0004;
+        keyLight.shadow.normalBias = 0.02;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0xedd4c0, 1.1);
+        fillLight.position.set(-3.5, 1.2, 2.0);
+        scene.add(fillLight);
+
+        const rimLight = new THREE.PointLight(0xffffff, 1.6, 8);
+        rimLight.position.set(0, 3.0, -2.5);
+        scene.add(rimLight);
+
+        const shadowPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(6, 6),
+            new THREE.ShadowMaterial({ opacity: 0.16 })
+        );
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = -1.15;
+        shadowPlane.receiveShadow = true;
+        scene.add(shadowPlane);
+
+        /* ========================================================
+           4. 高精度真实 PBR 纹理工厂
+           ======================================================== */
+        function createRealShellTextures(baseColorHex, spikeColorHex, seamColorHex) {
+            const size = 1024;
+            const cols = 26;
+            const rows = 26;
+            const cell = size / cols;
+
+            const cColor = document.createElement('canvas');
+            cColor.width = cColor.height = size;
+            const ctxC = cColor.getContext('2d');
+
+            const cNorm = document.createElement('canvas');
+            cNorm.width = cNorm.height = size;
+            const ctxN = cNorm.getContext('2d');
+
+            const hex2rgb = (h) => {
+                const hex = h.replace('#', '');
+                return {
+                    r: parseInt(hex.substring(0, 2), 16),
+                    g: parseInt(hex.substring(2, 4), 16),
+                    b: parseInt(hex.substring(4, 6), 16)
+                };
+            };
+            const cBase = hex2rgb(baseColorHex);
+            const cSpike = hex2rgb(spikeColorHex);
+            const cSeam = hex2rgb(seamColorHex);
+
+            const seeds = [];
+            for (let j = 0; j < rows; j++) {
+                seeds[j] = [];
+                for (let i = 0; i < cols; i++) {
+                    const rowOffset = (j % 2) * 0.5;
+                    seeds[j][i] = {
+                        x: (i + rowOffset + (Math.random() - 0.5) * 0.52) * cell,
+                        y: (j + 0.5 + (Math.random() - 0.5) * 0.52) * cell,
+                        tone: 0.80 + Math.random() * 0.38,
+                        domeH: 0.72 + Math.random() * 0.30,
+                        spikeH: 0.65 + Math.random() * 0.55,
+                        spikeOffX: (Math.random() - 0.5) * cell * 0.18,
+                        spikeOffY: (Math.random() - 0.5) * cell * 0.18
+                    };
+                }
+            }
+
+            const imgC = ctxC.createImageData(size, size);
+            const dataC = imgC.data;
+            const heightMap = new Float32Array(size * size);
+
+            const crackW = 5.0;
+            const spikeRadius = cell * 0.24;
+
+            for (let py = 0; py < size; py++) {
+                const cj = Math.floor(py / cell);
+                for (let px = 0; px < size; px++) {
+                    const ci = Math.floor(px / cell);
+
+                    let d1 = 1e9, d2 = 1e9, nearest = null;
+                    for (let oj = -1; oj <= 1; oj++) {
+                        for (let oi = -1; oi <= 1; oi++) {
+                            const gj = (cj + oj + rows) % rows;
+                            const gi = (ci + oi + cols) % cols;
+                            const s = seeds[gj][gi];
+
+                            let ddx = px - s.x;
+                            let ddy = py - s.y;
+                            if (ddx > size * 0.5) ddx -= size;
+                            else if (ddx < -size * 0.5) ddx += size;
+                            if (ddy > size * 0.5) ddy -= size;
+                            else if (ddy < -size * 0.5) ddy += size;
+
+                            const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                            if (dist < d1) {
+                                d2 = d1;
+                                d1 = dist;
+                                nearest = s;
+                            } else if (dist < d2) {
+                                d2 = dist;
+                            }
+                        }
+                    }
+
+                    const spkDx = px - (nearest.x + nearest.spikeOffX);
+                    const spkDy = py - (nearest.y + nearest.spikeOffY);
+                    const spikeDist = Math.sqrt(spkDx * spkDx + spkDy * spkDy);
+
+                    const seamDist = d2 - d1;
+                    const rNorm = Math.min(1.0, d1 / (cell * 0.78));
+
+                    const domeProfile = Math.max(0, 1.0 - Math.pow(rNorm, 1.5));
+                    let h = Math.pow(domeProfile, 1.4) * nearest.domeH;
+                    if (spikeDist < spikeRadius) {
+                        const spkK = 1.0 - spikeDist / spikeRadius;
+                        h += Math.pow(spkK, 0.85) * 0.58 * nearest.spikeH;
+                    }
+                    if (seamDist < crackW) {
+                        const seamK = seamDist / crackW;
+                        h *= seamK * seamK;
+                    }
+                    heightMap[py * size + px] = h;
+
+                    let r = cBase.r * nearest.tone;
+                    let g = cBase.g * nearest.tone;
+                    let b = cBase.b * nearest.tone;
+
+                    const domeShade = 0.72 + 0.38 * domeProfile;
+                    r *= domeShade;
+                    g *= domeShade;
+                    b *= domeShade;
+
+                    if (spikeDist < spikeRadius * 0.85) {
+                        const k = 1.0 - spikeDist / (spikeRadius * 0.85);
+                        const kk = Math.pow(k, 0.9);
+                        r = r * (1 - kk * 0.75) + cSpike.r * kk * 0.75;
+                        g = g * (1 - kk * 0.75) + cSpike.g * kk * 0.75;
+                        b = b * (1 - kk * 0.75) + cSpike.b * kk * 0.75;
+                        r += kk * 22;
+                        g += kk * 8;
+                    }
+
+                    if (seamDist < crackW) {
+                        const ck = Math.pow(1.0 - seamDist / crackW, 1.35);
+                        r = r * (1 - ck) + cSeam.r * 0.42 * ck;
+                        g = g * (1 - ck) + cSeam.g * 0.42 * ck;
+                        b = b * (1 - ck) + cSeam.b * 0.42 * ck;
+                    }
+
+                    const noise = (Math.random() - 0.5) * 10;
+                    const idx = (py * size + px) * 4;
+                    dataC[idx]     = Math.max(0, Math.min(255, r + noise));
+                    dataC[idx + 1] = Math.max(0, Math.min(255, g + noise));
+                    dataC[idx + 2] = Math.max(0, Math.min(255, b + noise));
+                    dataC[idx + 3] = 255;
+                }
+            }
+            ctxC.putImageData(imgC, 0, 0);
+
+            const imgN = ctxN.createImageData(size, size);
+            const dataN = imgN.data;
+            const strength = 22.0;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const xL = (x - 1 + size) % size;
+                    const xR = (x + 1) % size;
+                    const yU = (y - 1 + size) % size;
+                    const yD = (y + 1) % size;
+
+                    const dx = (heightMap[y * size + xR] - heightMap[y * size + xL]) * 0.5;
+                    const dy = (heightMap[yD * size + x] - heightMap[yU * size + x]) * 0.5;
+
+                    const nx = -dx * strength;
+                    const ny = -dy * strength;
+                    const nz = 1.0;
+                    const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+                    const idx = (y * size + x) * 4;
+                    dataN[idx]     = Math.floor(((nx / len) * 0.5 + 0.5) * 255);
+                    dataN[idx + 1] = Math.floor(((ny / len) * 0.5 + 0.5) * 255);
+                    dataN[idx + 2] = Math.floor(((nz / len) * 0.5 + 0.5) * 255);
+                    dataN[idx + 3] = 255;
+                }
+            }
+            ctxN.putImageData(imgN, 0, 0);
+
+            const map = new THREE.CanvasTexture(cColor);
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.repeat.set(2, 2);
+            map.anisotropy = 4;
+
+            const normalMap = new THREE.CanvasTexture(cNorm);
+            normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+            normalMap.repeat.set(2, 2);
+            normalMap.anisotropy = 4;
+
+            return { map, normalMap };
+        }
+
+        let shellTexGroup = createRealShellTextures(currentVariety.colorShell, currentVariety.colorSpike, currentVariety.colorSeam);
+
+        function createRealPulpBumpTexture() {
+            const size = 1024;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#808080';
+            ctx.fillRect(0, 0, size, size);
+
+            for (let i = 0; i < 9000; i++) {
+                const x = Math.random() * size;
+                const y = Math.random() * size;
+                const r = 1.2 + Math.random() * 3.6;
+                const gx = x - r * 0.32;
+                const gy = y - r * 0.32;
+                const grad = ctx.createRadialGradient(gx, gy, 0, x, y, r);
+                grad.addColorStop(0, '#f4f4f4');
+                grad.addColorStop(0.5, '#b8b8b8');
+                grad.addColorStop(1, '#6e6e6e');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.globalCompositeOperation = 'multiply';
+            for (let i = 0; i < 900; i++) {
+                const x = Math.random() * size;
+                const y = Math.random() * size;
+                const r = 2 + Math.random() * 5;
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+                grad.addColorStop(0, 'rgba(70, 70, 70, 0.85)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalCompositeOperation = 'source-over';
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
+            ctx.lineWidth = 1.0;
+            for (let i = 0; i < 160; i++) {
+                const x = Math.random() * size;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.quadraticCurveTo(x + (Math.random() - 0.5) * 22, size * 0.5, x, size);
+                ctx.stroke();
+            }
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(4, 4);
+            return tex;
+        }
+
+        const pulpBumpTex = createRealPulpBumpTexture();
+
+        function createRealSeedTexture() {
+            const size = 512;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const ctx = c.getContext('2d');
+
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, size);
+            bgGrad.addColorStop(0, '#1c0805');
+            bgGrad.addColorStop(0.45, '#3d150d');
+            bgGrad.addColorStop(0.75, '#2a0d08');
+            bgGrad.addColorStop(1, '#140503');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, size, size);
+
+            for (let i = 0; i < 130; i++) {
+                const x = Math.random() * size;
+                const depth = 0.15 + Math.random() * 0.35;
+                ctx.strokeStyle = `rgba(20, 8, 4, ${depth})`;
+                ctx.lineWidth = 1.0 + Math.random() * 2.2;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.bezierCurveTo(
+                    x + (Math.random() - 0.5) * 18, size * 0.3,
+                    x + (Math.random() - 0.5) * 18, size * 0.7,
+                    x, size
+                );
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(130, 65, 40, 0.22)';
+            ctx.lineWidth = 0.8;
+            for (let i = 0; i < 80; i++) {
+                const x = Math.random() * size;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.bezierCurveTo(
+                    x + (Math.random() - 0.5) * 14, size * 0.3,
+                    x + (Math.random() - 0.5) * 14, size * 0.7,
+                    x, size
+                );
+                ctx.stroke();
+            }
+
+            const hilum = ctx.createRadialGradient(size * 0.5, size * 0.15, 2, size * 0.5, size * 0.15, 62);
+            hilum.addColorStop(0, '#b78764');
+            hilum.addColorStop(0.35, '#6a3520');
+            hilum.addColorStop(0.75, '#3a160c');
+            hilum.addColorStop(1, 'transparent');
+            ctx.fillStyle = hilum;
+            ctx.beginPath();
+            ctx.arc(size * 0.5, size * 0.15, 62, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(30, 12, 6, 0.7)';
+            ctx.beginPath();
+            ctx.arc(size * 0.5, size * 0.15, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+            return tex;
+        }
+
+        const seedTex = createRealSeedTexture();
+
+        /* ========================================================
+           5. 真实模型装配与光学质感
+           ======================================================== */
+        let pulpBasePositions = [];
+        function createTwinLobedPulpGeometry() {
+            const geo = new THREE.SphereGeometry(1.0, 80, 60);
+            const pos = geo.attributes.position;
+            const v = new THREE.Vector3();
+            pulpBasePositions = [];
+
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+
+                if (v.y > 0.0) {
+                    const cleft = Math.exp(-Math.pow(v.x * 2.6, 2)) * (v.y * 0.24);
+                    v.y -= cleft;
+                    v.x *= (1.0 + v.y * 0.09);
+                } else {
+                    v.x *= (1.0 + v.y * 0.08);
+                    v.z *= (1.0 + v.y * 0.08);
+                }
+                v.z *= 0.95;
+                v.x *= 1.04;
+
+                pos.setXYZ(i, v.x, v.y, v.z);
+                pulpBasePositions.push(v.clone());
+            }
+            geo.computeVertexNormals();
+            return geo;
+        }
+
+        const pulpGeo = createTwinLobedPulpGeometry();
+        const pulpMat = new THREE.MeshPhysicalMaterial({
+            color: new THREE.Color(currentVariety.pulpColor),
+            transmission: currentVariety.pulpTransmission,
+            opacity: 1.0,
+            transparent: true,
+            roughness: 0.22,
+            ior: 1.39,
+            reflectivity: 0.65,
+            clearcoat: 0.85,
+            clearcoatRoughness: 0.12,
+            thickness: 2.2,
+            attenuationColor: new THREE.Color(0xffeedd),
+            attenuationDistance: 0.75,
+            bumpMap: pulpBumpTex,
+            bumpScale: 0.016
+        });
+        const pulpMesh = new THREE.Mesh(pulpGeo, pulpMat);
+        pulpMesh.castShadow = true;
+        lycheeContainer.add(pulpMesh);
+
+        // ★ 真实植物凝脂微光感（克制自然，避免塑料水球感）
+        function updateFirmnessVisuals(val) {
+            const k = (val - 10) / 90;
+            pulpMat.transmission = THREE.MathUtils.lerp(0.68, 0.50, k);
+            pulpMat.roughness = THREE.MathUtils.lerp(0.18, 0.28, k);
+            pulpMat.bumpScale = THREE.MathUtils.lerp(0.010, 0.022, k);
+            pulpMat.clearcoat = THREE.MathUtils.lerp(0.95, 0.78, k);
+            pulpMat.clearcoatRoughness = THREE.MathUtils.lerp(0.06, 0.15, k);
+            pulpMat.attenuationDistance = THREE.MathUtils.lerp(1.15, 0.65, k);
+        }
+
+        // 焦核
+        const seedGeo = new THREE.SphereGeometry(0.42, 36, 28);
+        seedGeo.scale(0.65, 1.25, 0.72);
+        const seedMat = new THREE.MeshPhysicalMaterial({
+            map: seedTex,
+            roughness: 0.24,
+            metalness: 0.05,
+            clearcoat: 0.92,
+            clearcoatRoughness: 0.06,
+            bumpMap: seedTex,
+            bumpScale: 0.01
+        });
+        const seedMesh = new THREE.Mesh(seedGeo, seedMat);
+        seedMesh.position.set(0, 0.02, 0);
+        lycheeContainer.add(seedMesh);
+
+        // 龟裂果壳
+        const shellGeo = new THREE.SphereGeometry(1.06, 120, 80);
+        {
+            const pos = shellGeo.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < pos.count; i++) {
+                v.fromBufferAttribute(pos, i);
+
+                if (v.y > 0.0) {
+                    v.y -= Math.exp(-Math.pow(v.x * 2.6, 2)) * (v.y * 0.24);
+                    v.x *= (1.0 + v.y * 0.09);
+                } else {
+                    v.x *= (1.0 + v.y * 0.08);
+                    v.z *= (1.0 + v.y * 0.08);
+                }
+                v.z *= 0.95;
+                v.x *= 1.04;
+
+                pos.setXYZ(i, v.x, v.y, v.z);
+            }
+            shellGeo.computeVertexNormals();
+        }
+
+        const shellMat = new THREE.MeshStandardMaterial({
+            map: shellTexGroup.map,
+            normalMap: shellTexGroup.normalMap,
+            normalScale: new THREE.Vector2(1.35, 1.35),
+            roughness: 0.60,
+            metalness: 0.03,
+            side: THREE.DoubleSide
+        });
+
+        let shellShaderRef = null;
+        shellMat.onBeforeCompile = (shader) => {
+            shellShaderRef = shader;
+            shader.uniforms.uCutoffY = { value: 1.15 - peelProgress * 2.3 };
+
+            shader.vertexShader = `
+                varying vec3 vLocalPos;
+                ${shader.vertexShader}
+            `.replace(
+                `#include <begin_vertex>`,
+                `#include <begin_vertex>
+                 vLocalPos = position;`
+            );
+
+            shader.fragmentShader = `
+                uniform float uCutoffY;
+                varying vec3 vLocalPos;
+                ${shader.fragmentShader}
+            `.replace(
+                `#include <dithering_fragment>`,
+                `#include <dithering_fragment>
+                 float serration = sin(vLocalPos.x * 22.0) * 0.045 + cos(vLocalPos.z * 18.0) * 0.035;
+                 if (vLocalPos.y > uCutoffY + serration) {
+                     discard;
+                 }
+                 if (!gl_FrontFacing) {
+                     vec3 innerWhite = vec3(0.96, 0.92, 0.85);
+                     gl_FragColor.rgb = mix(innerWhite, gl_FragColor.rgb, 0.08);
+                 }
+                `
+            );
+        };
+
+        const shellMesh = new THREE.Mesh(shellGeo, shellMat);
+        shellMesh.castShadow = true;
+        shellMesh.receiveShadow = true;
+        lycheeContainer.add(shellMesh);
+
+        function updatePeelUniform(progress) {
+            const cutoffY = 1.15 - progress * 2.3;
+            if (shellShaderRef) {
+                shellShaderRef.uniforms.uCutoffY.value = cutoffY;
+            }
+        }
+
+        /* ========================================================
+           6. 出汁模拟系统
+           ======================================================== */
+        let pulpWetness = 0.0;
+
+        const dropletMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            roughness: 0.04,
+            metalness: 0.08,
+            transmission: 0.6,
+            opacity: 0.94,
+            transparent: true,
+            ior: 1.45,
+            reflectivity: 0.92,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.03,
+            attenuationColor: new THREE.Color(0xfffef8),
+            attenuationDistance: 0.3
+        });
+
+        const maxMicroDroplets = 24;
+        const microDroplets = [];
+        const microGeo = new THREE.SphereGeometry(0.028, 10, 10);
+
+        for (let i = 0; i < maxMicroDroplets; i++) {
+            const mesh = new THREE.Mesh(microGeo, dropletMat);
+            mesh.visible = false;
+            scene.add(mesh);
+            microDroplets.push({
+                mesh: mesh,
+                pos: new THREE.Vector3(),
+                vx: 0, vy: 0, vz: 0,
+                baseScale: 1.0,
+                life: 0,
+                maxLife: 30
+            });
+        }
+
+        const maxTrickleDroplets = 40;
+        const trickleDroplets = [];
+        const trickleGeo = new THREE.SphereGeometry(0.042, 12, 12);
+
+        for (let i = 0; i < maxTrickleDroplets; i++) {
+            const mesh = new THREE.Mesh(trickleGeo, dropletMat);
+            mesh.visible = false;
+            lycheeContainer.add(mesh);
+            trickleDroplets.push({
+                mesh: mesh,
+                localPos: new THREE.Vector3(),
+                flowSpeed: 0.006,
+                baseScale: 1.0,
+                life: 0,
+                maxLife: 80
+            });
+        }
+
+        function triggerJuiceSplash(localContactPoint = null, pressMultiplier = 1.0) {
+            const variety = currentVariety;
+            const intensity = variety.juiceIntensity * pressMultiplier;
+
+            pulpWetness = Math.min(1.2, pulpWetness + 0.45 * intensity);
+
+            let origin = localContactPoint ? localContactPoint.clone() : new THREE.Vector3(0, 0.42, 0.66);
+            if (origin.y < 0.15) origin.y = 0.32;
+
+            const microCount = Math.floor(6 * variety.burstSpurt * intensity);
+            let spawnedMicro = 0;
+
+            for (let i = 0; i < microDroplets.length && spawnedMicro < microCount; i++) {
+                const d = microDroplets[i];
+                if (d.mesh.visible) continue;
+
+                d.mesh.visible = true;
+                d.life = 0;
+                d.maxLife = 22 + Math.random() * 12;
+
+                const spawnLocal = origin.clone().add(new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.12,
+                    (Math.random() - 0.5) * 0.08,
+                    (Math.random() - 0.5) * 0.12
+                ));
+                d.pos.copy(spawnLocal).applyMatrix4(lycheeContainer.matrixWorld);
+                d.mesh.position.copy(d.pos);
+
+                const normalDir = spawnLocal.clone().normalize();
+                const gentleSpeed = (0.015 + Math.random() * 0.02) * intensity;
+                d.vx = normalDir.x * gentleSpeed + (Math.random() - 0.5) * 0.008;
+                d.vy = normalDir.y * gentleSpeed * 0.6 + (0.008 + Math.random() * 0.012);
+                d.vz = normalDir.z * gentleSpeed + 0.01;
+
+                d.baseScale = 0.5 + Math.random() * 0.35;
+                d.mesh.scale.setScalar(d.baseScale);
+                spawnedMicro++;
+            }
+
+            const trickleCount = Math.floor(14 * variety.dripAmount * intensity);
+            let spawnedTrickle = 0;
+
+            for (let i = 0; i < trickleDroplets.length && spawnedTrickle < trickleCount; i++) {
+                const td = trickleDroplets[i];
+                if (td.mesh.visible) continue;
+
+                td.mesh.visible = true;
+                td.life = 0;
+                td.maxLife = 50 + Math.random() * 40;
+
+                td.localPos.copy(origin).add(new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.22,
+                    (Math.random() - 0.5) * 0.10,
+                    (Math.random() - 0.5) * 0.18
+                ));
+                td.localPos.normalize().multiplyScalar(0.985);
+
+                td.flowSpeed = (0.004 + Math.random() * 0.007) * (0.8 + intensity * 0.25);
+                td.baseScale = (0.55 + Math.random() * 0.45) * Math.min(intensity, 1.25);
+
+                td.mesh.position.copy(td.localPos);
+                td.mesh.scale.setScalar(td.baseScale);
+                spawnedTrickle++;
+            }
+
+            playSquishSound(intensity);
+        }
+
+        /* ========================================================
+           7. 物理计算（粘弹性平稳回弹，不夸张变形）
+           ======================================================== */
+        let wobbleTime = 0;
+
+        function updatePhysics(dt) {
+            const k = (currentVariety.elasticity - 10) / 90;
+
+            // 软肉：温润恢复；脆肉：迅速复位
+            const stiffness = THREE.MathUtils.lerp(0.32, 0.82, k);
+            const damping = THREE.MathUtils.lerp(0.76, 0.62, k);
+
+            const fx = (1 - squishDeform.x) * stiffness;
+            const fy = (1 - squishDeform.y) * stiffness;
+            const fz = (1 - squishDeform.z) * stiffness;
+
+            squishVelocity.x = (squishVelocity.x + fx) * damping;
+            squishVelocity.y = (squishVelocity.y + fy) * damping;
+            squishVelocity.z = (squishVelocity.z + fz) * damping;
+
+            squishDeform.x += squishVelocity.x;
+            squishDeform.y += squishVelocity.y;
+            squishDeform.z += squishVelocity.z;
+
+            shellMesh.scale.set(1.0, 1.0, 1.0);
+
+            const cutoffY = 1.15 - peelProgress * 2.3;
+            const pPos = pulpGeo.attributes.position;
+            const maxDef = getDynamicSquishDepth();
+
+            const clampedDx = Math.max(-maxDef, Math.min(maxDef, squishDeform.x - 1.0));
+            const clampedDy = Math.max(-maxDef, Math.min(maxDef, squishDeform.y - 1.0));
+            const clampedDz = Math.max(-maxDef, Math.min(maxDef, squishDeform.z - 1.0));
+
+            for (let i = 0; i < pPos.count; i++) {
+                const b = pulpBasePositions[i];
+                const exposure = (b.y - cutoffY) / 1.0;
+                const weight = Math.max(0.0, Math.min(1.0, exposure));
+                const smoothWeight = weight * weight * (3.0 - 2.0 * weight);
+
+                const sx = 1.0 + clampedDx * smoothWeight;
+                const sy = 1.0 + clampedDy * smoothWeight;
+                const sz = 1.0 + clampedDz * smoothWeight;
+
+                pPos.setXYZ(i, b.x * sx, b.y * sy, b.z * sz);
+            }
+            pulpGeo.computeVertexNormals();
+            pulpGeo.attributes.position.needsUpdate = true;
+
+            if (pulpWetness > 0.001) {
+                pulpWetness = Math.max(0, pulpWetness - dt * 0.35);
+            }
+
+            seedMesh.scale.set(
+                currentVariety.seedScale,
+                currentVariety.seedScale * 1.3,
+                currentVariety.seedScale
+            );
+
+            for (let i = 0; i < microDroplets.length; i++) {
+                const d = microDroplets[i];
+                if (!d.mesh.visible) continue;
+
+                d.life++;
+                const prg = d.life / d.maxLife;
+                if (prg >= 1.0) {
+                    d.mesh.visible = false;
+                    continue;
+                }
+
+                d.pos.x += d.vx;
+                d.pos.y += d.vy;
+                d.pos.z += d.vz;
+                d.vy -= 0.0028;
+                d.vx *= 0.96;
+                d.vz *= 0.96;
+
+                const s = d.baseScale * (1 - prg * 0.6);
+                d.mesh.scale.setScalar(s);
+                d.mesh.position.copy(d.pos);
+            }
+
+            for (let i = 0; i < trickleDroplets.length; i++) {
+                const td = trickleDroplets[i];
+                if (!td.mesh.visible) continue;
+
+                td.life++;
+                const prg = td.life / td.maxLife;
+                if (prg >= 1.0) {
+                    td.mesh.visible = false;
+                    continue;
+                }
+
+                td.localPos.y -= td.flowSpeed;
+                td.localPos.normalize().multiplyScalar(0.99);
+
+                const s = td.baseScale * (1 - prg * 0.45);
+                td.mesh.scale.set(s * 1.1, s * 0.92, s * 1.1);
+                td.mesh.position.copy(td.localPos);
+            }
+
+            lycheeContainer.rotation.y += (targetRotY - lycheeContainer.rotation.y) * 0.1;
+            lycheeContainer.rotation.x += (targetRotX - lycheeContainer.rotation.x) * 0.1;
+
+            // ★ 平滑逼近滚轮缩放目标距离
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.12;
+
+            if (!isDragging) {
+                targetRotY += 0.0025;
+                lycheeContainer.position.y = -0.05 + Math.sin(wobbleTime * 1.8) * 0.012;
+            }
+            wobbleTime += dt;
+        }
+
+        /* ========================================================
+           8. 界面联动与交互
+           ======================================================== */
+        function applyVariety(idx) {
+            currentVarietyIdx = idx;
+            currentVariety = LYCHEE_VARIETIES[idx];
+
+            document.getElementById('heroTitle').innerText = `${currentVariety.name}.`;
+            document.getElementById('heroDesc').innerHTML = currentVariety.desc;
+            document.getElementById('specimenIndex').innerText = `0${idx + 1} / 08`;
+            document.getElementById('statTss').innerText = currentVariety.tss;
+            document.getElementById('statTexture').innerText = currentVariety.texture;
+            document.getElementById('statSeed').innerText = currentVariety.seedRate;
+            document.getElementById('statJuice').innerText = currentVariety.juiceLevel;
+            document.getElementById('firmnessSlider').value = currentVariety.elasticity;
+            document.getElementById('firmnessValText').innerText = getFirmnessLabel(currentVariety.elasticity);
+
+            shellTexGroup = createRealShellTextures(currentVariety.colorShell, currentVariety.colorSpike, currentVariety.colorSeam);
+            shellMat.map = shellTexGroup.map;
+            shellMat.normalMap = shellTexGroup.normalMap;
+            shellMat.needsUpdate = true;
+
+            pulpMat.color.set(currentVariety.pulpColor);
+            updateFirmnessVisuals(currentVariety.elasticity);
+
+            const depth = getDynamicSquishDepth() * 0.35;
+            squishVelocity.y = -depth * 0.3;
+            triggerJuiceSplash(new THREE.Vector3(0, 0.45, 0.65), 0.35);
+
+            document.querySelectorAll('.variety-chip').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        const varietyGrid = document.getElementById('varietyGrid');
+        LYCHEE_VARIETIES.forEach((v, i) => {
+            const btn = document.createElement('button');
+            btn.className = `variety-chip ${i === currentVarietyIdx ? 'active' : ''}`;
+            btn.innerHTML = `<span class="dot-indicator"></span>${v.name}`;
+            btn.addEventListener('click', () => applyVariety(i));
+            varietyGrid.appendChild(btn);
+        });
+
+        const peelSlider = document.getElementById('peelSlider');
+        peelSlider.addEventListener('input', (e) => {
+            peelProgress = e.target.value / 100;
+            const label = e.target.value == 48 ? '48% (参考图状态)' : `${e.target.value}%`;
+            document.getElementById('peelValText').innerText = label;
+            updatePeelUniform(peelProgress);
+            squishVelocity.y = (Math.random() - 0.5) * 0.015;
+        });
+
+        const firmnessSlider = document.getElementById('firmnessSlider');
+        firmnessSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            currentVariety.elasticity = val;
+            document.getElementById('firmnessValText').innerText = getFirmnessLabel(val);
+            updateFirmnessVisuals(val);
+        });
+
+        document.getElementById('btnSqueeze').addEventListener('click', () => {
+            const depth = getDynamicSquishDepth();
+            const k = (currentVariety.elasticity - 10) / 90;
+
+            squishDeform.y = 1.0 - depth * 1.05;
+            const sideBulge = depth * (0.38 + (1 - k) * 0.14);
+            squishDeform.x = 1.0 + sideBulge;
+            squishDeform.z = 1.0 + sideBulge;
+
+            squishVelocity.y = -THREE.MathUtils.lerp(0.045, 0.016, k);
+            squishVelocity.x = THREE.MathUtils.lerp(0.02, 0.008, k);
+            squishVelocity.z = THREE.MathUtils.lerp(0.02, 0.008, k);
+
+            triggerJuiceSplash(new THREE.Vector3(0, 0.45, 0.66), 1.0);
+            const hint = document.getElementById('hintBadge');
+            if (hint) hint.style.opacity = '0';
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            targetRotX = 0;
+            targetRotY = 0;
+            targetCameraZ = 4.6; // 还原相机缩放
+            peelSlider.value = 48;
+            peelProgress = 0.48;
+            document.getElementById('peelValText').innerText = "48% (参考图状态)";
+            updatePeelUniform(0.48);
+            squishDeform = { x: 1, y: 1, z: 1 };
+            squishVelocity = { x: 0, y: 0, z: 0 };
+        });
+
+        document.getElementById('chkSeed').addEventListener('change', (e) => {
+            seedMesh.visible = e.target.checked;
+        });
+
+        /* ========================================================
+           9. 交互操控：滚轮缩放、双指缩放与拖拽旋转
+           ======================================================== */
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        // ★ 滚轮平滑缩放画面荔枝大小
+        window.addEventListener('wheel', (e) => {
+            if (e.target.closest('.controls-card')) return; // 避免干扰控制面板滑动
+            e.preventDefault();
+            const zoomSpeed = 0.0035;
+            targetCameraZ = Math.max(minCameraZ, Math.min(maxCameraZ, targetCameraZ + e.deltaY * zoomSpeed));
+        }, { passive: false });
+
+        // 双指触控捏合缩放支持
+        let initialPinchDist = 0;
+        let startCameraZ = 4.6;
+        function getTouchDist(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function onPointerDown(e) {
+            isDragging = true;
+            lastMousePos = { x: e.clientX, y: e.clientY };
+
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObjects([pulpMesh, shellMesh]);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                const depth = getDynamicSquishDepth();
+                const k = (currentVariety.elasticity - 10) / 90;
+
+                squishDeform.y = 1.0 - depth;
+                const sideBulge = depth * (0.35 + (1 - k) * 0.12);
+                squishDeform.x = 1.0 + sideBulge;
+                squishDeform.z = 1.0 + sideBulge;
+
+                squishVelocity.y = -THREE.MathUtils.lerp(0.04, 0.015, k);
+                squishVelocity.x = THREE.MathUtils.lerp(0.018, 0.007, k);
+                squishVelocity.z = THREE.MathUtils.lerp(0.018, 0.007, k);
+
+                const localHit = lycheeContainer.worldToLocal(hit.point.clone());
+                triggerJuiceSplash(localHit, 0.85);
+
+                const hint = document.getElementById('hintBadge');
+                if (hint) hint.style.opacity = '0';
+            }
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - lastMousePos.x;
+            const dy = e.clientY - lastMousePos.y;
+
+            targetRotY += dx * 0.0085;
+            targetRotX = Math.max(-0.85, Math.min(0.85, targetRotX + dy * 0.0085));
+
+            lastMousePos = { x: e.clientX, y: e.clientY };
+        }
+
+        function onPointerUp() {
+            if (isDragging) {
+                isDragging = false;
+                const k = (currentVariety.elasticity - 10) / 90;
+                squishVelocity.y = THREE.MathUtils.lerp(0.035, 0.012, k);
+                squishVelocity.x = -THREE.MathUtils.lerp(0.016, 0.006, k);
+                squishVelocity.z = -THREE.MathUtils.lerp(0.016, 0.006, k);
+                playSquishSound(0.4);
+            }
+        }
+
+        window.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerUp);
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                isDragging = false;
+                initialPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+                startCameraZ = targetCameraZ;
+            } else if (e.touches.length === 1) {
+                onPointerDown(e.touches[0]);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDist > 0) {
+                const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+                const factor = initialPinchDist / currentDist;
+                targetCameraZ = Math.max(minCameraZ, Math.min(maxCameraZ, startCameraZ * factor));
+            } else if (e.touches.length === 1) {
+                onPointerMove(e.touches[0]);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                initialPinchDist = 0;
+            }
+            if (e.touches.length === 0) {
+                onPointerUp();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /* ========================================================
+           10. 渲染循环
+           ======================================================== */
+        let lastTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = performance.now();
+            const dt = Math.min((now - lastTime) / 1000, 0.1);
+            lastTime = now;
+
+            updatePhysics(dt);
+            renderer.render(scene, camera);
+        }
+
+        applyVariety(currentVarietyIdx);
+        animate();
+    </script>
+
+  <style id="peel-return-style">
+    #peel-return-profile{position:fixed;right:24px;top:22px;z-index:99999;border:1px solid rgba(112,67,58,.38);background:rgba(250,246,239,.9);backdrop-filter:blur(12px);color:#70433a;padding:10px 16px;border-radius:999px;font:14px/1.2 "Noto Serif SC",serif;letter-spacing:.08em;cursor:pointer;box-shadow:0 8px 28px rgba(65,45,38,.1);transition:transform .25s ease,background .25s ease}
+    #peel-return-profile:hover{transform:translateY(-2px);background:#fffaf4}
+  </style>
+  <button id="peel-return-profile" type="button" aria-label="返回荔枝介绍页">← 返回介绍</button>
+  <script>
+    document.getElementById('peel-return-profile').addEventListener('click', function(){ location.href = 'index.html'; });
+  </script>
+
+</body>
+</html>
