@@ -2523,6 +2523,64 @@
             .interaction-guide-mark::after { animation: none !important; }
         }
         /* End context-aware interaction guide. */
+
+        /* Cross-browser visibility guard for the two persistent information rails.
+           Keep the Guangdong timeline hidden in glide mode, but make it explicit
+           and legible as soon as the overview state is active. */
+        #map-interface .map-timeline,
+        #transport-panel {
+            z-index: 58;
+            isolation: isolate;
+        }
+
+        body.map-mode.map-overview-ready:not(.orchard-close):not(.china-map-mode):not(.travel-detail-open):not(.profile-page-visible)
+        #map-interface .map-timeline {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: translate(-50%, 0) !important;
+        }
+
+        body.map-mode.map-overview-ready:not(.orchard-close):not(.china-map-mode)
+        #map-interface .phenology-timeline-card {
+            background: rgba(72, 53, 59, 0.82) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.72) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.72) !important;
+            box-shadow: 0 12px 34px rgba(38, 25, 30, 0.18) !important;
+        }
+
+        body.map-mode.map-overview-ready:not(.orchard-close):not(.china-map-mode)
+        #map-interface .phenology-timeline-card,
+        body.map-mode.map-overview-ready:not(.orchard-close):not(.china-map-mode)
+        #map-interface .phenology-timeline-card * {
+            color: rgba(255, 255, 255, 0.96) !important;
+            text-shadow: 0 1px 7px rgba(20, 15, 17, 0.42) !important;
+        }
+
+        body.china-map-mode:not(.profile-page-visible) #transport-panel {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: translate(-50%, 0) !important;
+        }
+
+        body.china-map-mode #transport-panel .transport-card {
+            background: rgba(66, 48, 55, 0.86) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.62) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.62) !important;
+            box-shadow: 0 14px 38px rgba(34, 25, 29, 0.24) !important;
+        }
+
+        /* Preserve the intended glide behaviour: no timeline while flying close. */
+        body.map-mode.orchard-close:not(.china-map-mode) #map-interface .map-timeline,
+        body.travel-detail-open #map-interface .map-timeline {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        /* End persistent information rails. */
 </style>
 </head>
 <body class="h-full w-full relative">
